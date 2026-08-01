@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+@theme {
+	/* Default lighting: the keeper's room after dark (see theme.ts for the
+	   rest of the shelf). These are only the fallbacks; theme.ts overwrites
+	   the same custom properties on :root at runtime. */
+	--color-theme-bg: #1b1a15;
+	--color-theme-panel: #26241c;
+	--color-theme-border: #3c382b;
+	--color-theme-comment: #867a64;
+	--color-theme-text-secondary: #a89b83;
+	--color-theme-text: #cabfa8;
+	--color-theme-text-primary: #f0e7d4;
+	--color-theme-accent: #c7a04a;
+
+	/* Four families, strict jobs (loaded in main.tsx):
+	   display = headings, sans = prose, mono = catalogue data,
+	   hand = margin notes and Bagworm speech. */
+	--font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+	--font-sans: "IBM Plex Sans", system-ui, sans-serif;
+	--font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+	--font-hand: "Shantell Sans Variable", "Comic Sans MS", cursive;
+}
+
+html {
+	font-family: var(--font-sans);
+	scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+	display: none;
+}
+
+* {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Stationery ──────────────────────────────────────────────────── */
+
+/* A rubber-stamp mark: mono, inked in the accent, pressed on crooked.
+   The uneven radii and the diagonal mask fake a worn stamp pad. */
+.stamp {
+	display: inline-block;
+	font-family: var(--font-mono);
+	font-size: 0.625rem;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	line-height: 1;
+	color: var(--color-theme-accent);
+	border: 1.5px solid currentColor;
+	border-radius: 3px 6px 4px 7px / 6px 4px 7px 3px;
+	padding: 3px 6px;
+	transform: rotate(-2deg);
+	opacity: 0.85;
+	mask-image: repeating-linear-gradient(
+		37deg,
+		rgb(0 0 0 / 0.82) 0 2px,
+		rgb(0 0 0) 2px 5px
+	);
+}
+
+/* Ruled lines behind the taxonomy table on a specimen card. Local
+   attachment keeps the rules pinned to the text if the card scrolls. */
+.index-card-lines {
+	background-attachment: local;
+	background-image: repeating-linear-gradient(
+		to bottom,
+		transparent 0,
+		transparent 27px,
+		color-mix(in srgb, var(--color-theme-border) 55%, transparent) 27px,
+		color-mix(in srgb, var(--color-theme-border) 55%, transparent) 28px
+	);
+}
+
+/* ── The vivarium ────────────────────────────────────────────────── */
+
+/* Glass: a soft inner shadow all round so the tank reads as a box with
+   depth rather than a flat panel with a border. */
+.vivarium-glass {
+	box-shadow:
+		inset 0 2px 22px rgb(0 0 0 / 0.35),
+		inset 0 -12px 28px -12px rgb(0 0 0 / 0.4);
+}
+
+/* Tapping the glass. Short, small, and never repeated: the point is to
+   startle the bugs, not the reader. */
+@keyframes viv-shake {
+	0%, 100% { transform: translate3d(0, 0, 0); }
+	20% { transform: translate3d(-3px, 1px, 0); }
+	40% { transform: translate3d(3px, -1px, 0); }
+	60% { transform: translate3d(-2px, -1px, 0); }
+	80% { transform: translate3d(2px, 1px, 0); }
+}
+.vivarium-shake {
+	animation: viv-shake 0.42s ease-in-out;
+}
+
+/* Legs and wings. Two phases so the left and right sides of a bug are
+   never in lockstep, which is what makes a walk cycle read as walking. */
+@keyframes bug-step {
+	0%, 100% { transform: rotate(-5deg); }
+	50% { transform: rotate(5deg); }
+}
+.bug-leg {
+	animation: bug-step 0.42s ease-in-out infinite;
+	transform-origin: 60% 50%;
+}
+.bug-leg-b {
+	animation-delay: -0.21s;
+}
+
+@keyframes bug-flutter {
+	0%, 100% { transform: scaleY(1); }
+	50% { transform: scaleY(0.88); }
+}
+.bug-wing {
+	animation: bug-flutter 2.6s ease-in-out infinite;
+}
+
+/* ── The hand lens ───────────────────────────────────────────────── */
+
+/* The lens itself is a fixed-position circle; the "glass" is a backdrop
+   filter, so it genuinely brightens and warms whatever is beneath it
+   instead of pretending to with an overlay. */
+.lens-glass {
+	backdrop-filter: brightness(1.25) contrast(1.08) saturate(1.15);
+	background: radial-gradient(
+		circle at 32% 28%,
+		rgb(255 255 255 / 0.16),
+		rgb(255 255 255 / 0.03) 46%,
+		transparent 70%
+	);
+}
+
+/* While the lens is out, the real cursor would sit in the middle of the
+   glass and look wrong, so it goes away over the page itself. */
+body.lens-active,
+body.lens-active * {
+	cursor: none !important;
+}
+
+/* The controls keep their cursor. Hiding it everywhere means the one
+   button that puts the lens down is a button you cannot see yourself
+   aiming at, which turns a toy into a trap. */
+body.lens-active .lens-exempt,
+body.lens-active .lens-exempt * {
+	cursor: pointer !important;
+}
+
+/* ── Bagworm ─────────────────────────────────────────────────────── */
+
+/* the closed can slides in from off-screen and settles with a wobble */
+@keyframes bw-slide-in {
+	0% { transform: translateX(-70vw) rotate(-8deg); }
+	62% { transform: translateX(4%) rotate(3deg); }
+	82% { transform: translateX(-2%) rotate(-1.5deg); }
+	100% { transform: translateX(0) rotate(0); }
+}
+.bw-slide-in {
+	animation: bw-slide-in 1s ease-out both;
+}
+
+@keyframes bw-boing {
+	0% { transform: scaleY(0.3) scaleX(1.15); }
+	45% { transform: scaleY(1.12) scaleX(0.94); }
+	70% { transform: scaleY(0.95) scaleX(1.03); }
+	100% { transform: none; }
+}
+.bw-boing {
+	animation: bw-boing 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	transform-origin: bottom center;
+}
+
+@keyframes bw-bob {
+	0%, 100% { transform: scaleY(1); }
+	50% { transform: scaleY(0.975) translateY(0.5%); }
+}
+.bw-bob {
+	animation: bw-bob 3.2s ease-in-out infinite;
+	transform-origin: bottom center;
+}
+
+@keyframes bw-bubble-pop {
+	from { transform: scale(0.7); opacity: 0; }
+	to { transform: scale(1); opacity: 1; }
+}
+.bw-bubble {
+	animation: bw-bubble-pop 0.2s ease-out both;
+	transform-origin: bottom center;
+}
+
+@keyframes bw-zzz {
+	0% { opacity: 0; transform: translateY(4px); }
+	30% { opacity: 1; }
+	100% { opacity: 0; transform: translateY(-12px); }
+}
+.bw-zzz span {
+	display: inline-block;
+	animation: bw-zzz 2.4s ease-out infinite;
+}
+.bw-zzz span:nth-child(2) { animation-delay: 0.5s; }
+.bw-zzz span:nth-child(3) { animation-delay: 1s; }
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+/* The vivarium's own loop is disabled in JS (Vivarium.tsx bails before
+   requestAnimationFrame), so what is left here is the CSS decoration. */
+@media (prefers-reduced-motion: reduce) {
+	.bug-leg,
+	.bug-wing,
+	.vivarium-shake,
+	.bw-slide-in,
+	.bw-boing,
+	.bw-bob,
+	.bw-bubble,
+	.bw-zzz span {
+		animation: none;
+	}
+}

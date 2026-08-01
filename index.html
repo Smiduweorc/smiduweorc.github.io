@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<link rel="icon" type="image/webp" href="/bagworm-favicon.webp" />
+	<link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="theme-color" content="#1b1a15" />
+	<title>Smiduweorc</title>
+	<meta name="description"
+		content="Smiduweorc builds small, sharp developer tools and libraries, each named after the insect it behaves like. Lacewing, Cephalote, Bagworm and the rest of the collection." />
+	<meta property="og:title" content="Smiduweorc" />
+	<meta property="og:description"
+		content="Half Code, Half Insect Documentary. A collection of small, sharp developer tools." />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://smiduweorc.github.io/" />
+	<script>
+		// No-flash theme init: apply the saved palette before first paint.
+		// theme.ts writes this key on every change.
+		(function () {
+			try {
+				var raw = localStorage.getItem("smiduweorc-theme-colors");
+				if (!raw) return;
+				var c = JSON.parse(raw);
+				var root = document.documentElement;
+				var map = {
+					bg: "--color-theme-bg",
+					panel: "--color-theme-panel",
+					border: "--color-theme-border",
+					comment: "--color-theme-comment",
+					textSecondary: "--color-theme-text-secondary",
+					text: "--color-theme-text",
+					textPrimary: "--color-theme-text-primary",
+					accent: "--color-theme-accent",
+				};
+				for (var k in map) {
+					if (typeof c[k] === "string") root.style.setProperty(map[k], c[k]);
+				}
+				if (typeof c.bg === "string") {
+					var meta = document.querySelector('meta[name="theme-color"]');
+					if (meta) meta.setAttribute("content", c.bg);
+				}
+			} catch (e) {
+				/* first visit or corrupt storage; CSS defaults apply */
+			}
+		})();
+	</script>
+</head>
+
+<body>
+	<div id="root"></div>
+	<script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
