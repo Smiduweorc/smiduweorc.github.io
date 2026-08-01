@@ -87,7 +87,7 @@ function HouseRules({ pinNotes }: { pinNotes: boolean }) {
 		{
 			title: "Safe by default, not by reminder",
 			body: "A README that says \"remember to check the audience claim\" has already failed. If a mistake can be made impossible to write, that is where it gets handled: in the types, in the shape of the API, or at runtime. The docs are there to explain why, not to hold the railing up.",
-			note: "if the docs are load-bearing, the api is wrong.",
+			note: "if the docs you to stay safe by being vigilant, the api is wrong.",
 		},
 		{
 			title: "Numbers you can check",
