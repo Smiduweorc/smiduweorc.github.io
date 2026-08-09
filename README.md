@@ -32,8 +32,11 @@ Node 24+. React, TypeScript, Vite, Tailwind v4.
 ### Adding a project
 
 Add an entry to `SPECIMENS` in `src/specimens.ts`. It shows up in the right
-drawer automatically. Set `inTank: true` to also put it in the vivarium (three
-is about the limit before the case gets crowded).
+drawer automatically. Set `inTank: true` to also put it in the vivarium (four
+walk around in there now, plus three ambient extras, and that is about the
+limit before the case gets crowded). Each one in the tank wants its own entry
+in the depth list in `Vivarium.tsx`, or two of them end up on the same floor
+line.
 
 If the repo has its own `assets/logo.png`, add it to `SOURCES` in
 `scripts/build-artwork.py` and run the script; otherwise point `art` at one of

@@ -107,7 +107,10 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 				// lacewing you could hold in your hand, not one filling a
 				// vivarium.
 				width: Math.round(58 * artworkScale(s.art)),
-				depth: [0.15, 0.55, 0.35][i % 3],
+				// One depth per flagship, so no two share a floor line. The
+				// last one is furthest back on purpose: it is the tallest
+				// drawing in the case and the distance takes the edge off it.
+				depth: [0.15, 0.55, 0.35, 0.68][i % 4],
 				x: 0,
 				y: 0,
 				dir: i % 2 === 0 ? 1 : -1,

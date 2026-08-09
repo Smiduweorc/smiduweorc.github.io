@@ -34,10 +34,18 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "collection")
 # can. The line art survives being turned into a mask. The photo does not: it
 # flattens into a grey slab. So that one is cut just above the can's rim and
 # only the worm rides along, which is also the half people recognise.
+#
+# Termite's logo is the odd one out twice over: orange fill on near-black
+# rather than white line art, and drawn from above rather than side-on. It
+# still masks cleanly, because luminance turns the body into a solid shape and
+# the dark eyes into two holes in it. It reads as a filled silhouette next to
+# the line drawings instead of matching them, which is the drawing's doing and
+# not the script's.
 SOURCES: dict[str, tuple[str, float]] = {
     "lacewing": ("lacewing", 1.0),
     "Cephalote": ("cephalote", 1.0),
     "Bagworm": ("bagworm", 0.52),
+    "termite": ("termite", 1.0),
 }
 
 # Pixels above this (post-normalisation) count as linework when finding the

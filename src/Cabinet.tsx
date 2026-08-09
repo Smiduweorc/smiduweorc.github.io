@@ -74,6 +74,7 @@ function Drawer({
 		library: "you import these. they run inside your process.",
 		instrument: "you run these at your code. they don't ship with it.",
 		cast: "start here, then delete the bits you don't want.",
+		colony: "you run this one. other people are the ones using it.",
 	};
 
 	return (

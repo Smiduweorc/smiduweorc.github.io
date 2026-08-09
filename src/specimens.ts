@@ -8,7 +8,7 @@
 
 import type { ArtworkKey } from "./vivarium/artwork";
 
-export type Kind = "library" | "instrument" | "cast";
+export type Kind = "library" | "instrument" | "cast" | "colony";
 
 export type Specimen = {
 	id: string;
@@ -54,9 +54,13 @@ export const KIND_META: Record<Kind, { title: string; blurb: string }> = {
 		blurb:
 			"Templates. Empty project skeletons with the tooling already set up.",
 	},
+	colony: {
+		title: "Colonies",
+		blurb: "Applications. Things you host, that other people then use.",
+	},
 };
 
-export const KIND_ORDER: Kind[] = ["library", "instrument", "cast"];
+export const KIND_ORDER: Kind[] = ["library", "instrument", "cast", "colony"];
 
 const GH = "https://github.com/Smiduweorc";
 
@@ -213,6 +217,41 @@ export const SPECIMENS: Specimen[] = [
 		tags: ["C++", "N-API", "node-gyp", "native addons", "template"],
 		links: [{ label: "GitHub", href: `${GH}/nodeaddons` }],
 		note: "least used of the three. most time saved when it is.",
+	},
+	{
+		id: "termite",
+		name: "Termite",
+		binomial: "Reticulitermes suffragii",
+		kind: "colony",
+		art: "termite",
+		inTank: true,
+		tagline:
+			"A feedback board and release tracker for projects that ship in versions.",
+		description:
+			"A public board where anyone can post an idea or a bug and raise a hand for someone else's, with no signup form anywhere: accounts exist so that somebody can be the maintainer, and a visitor never needs one. An item is open, planned, shipped or declined, and that is the whole lifecycle. There is no \"in progress\", because nobody owes you a status update on a side project, and a declined item keeps its reason and stays on the board so the same request doesn't arrive four more times. The maintainer plans a version, opens its merge window, pulls items into it and ships the lot in one step; a planned release is allowed no date at all, because \"eventually\" is an honest answer and a fake date isn't. Underneath: Bun, Elysia, tRPC and Drizzle over Postgres, with a Vue front end.",
+		taxonomy: {
+			order: "TypeScript on Bun, Vue front end",
+			habitat: "your own box, usually behind your own wireguard",
+			diet: "feature requests scattered across discord threads",
+			stage: "released",
+			described: "August 2026",
+		},
+		tags: [
+			"TypeScript",
+			"Bun",
+			"Elysia",
+			"Vue",
+			"tRPC",
+			"Postgres",
+			"self-hosted",
+		],
+		links: [
+			{ label: "GitHub", href: `${GH}/termite` },
+			{ label: "Docs", href: `${GH}/termite/blob/master/docs/docs.md` },
+			{ label: "Write-up", href: "https://grmlfolio.vercel.app/" },
+		],
+		note: "the tokens it hands out are checked by lacewing, top drawer.",
+		quip: "eats wood. this one eats the todo list instead.",
 	},
 ];
 

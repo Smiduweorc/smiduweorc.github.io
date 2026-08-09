@@ -6,7 +6,8 @@
 // looking at the animal. This site uses them rather than inventing a second,
 // worse set.
 //
-// They are white line art on a near-black field, so they ship as alpha masks
+// Most are white line art on a near-black field (Termite's is filled, and drawn
+// from above rather than side-on), so they ship as alpha masks
 // (built by scripts/build-artwork.py) and get painted with
 // `background-color: currentColor`. That means one file per animal instead of
 // one per animal per theme, and the linework always sits at the right contrast
@@ -44,6 +45,16 @@ export const ARTWORK = {
 		src: "/collection/bagworm.png",
 		ratio: 171 / 142,
 		scale: 0.58,
+	},
+	// The only one drawn from above, so it is the only tall one: nearly twice
+	// as high as it is wide. Scaled off its height rather than its width, or a
+	// width that matched the others would stand it head and shoulders over the
+	// whole case.
+	termite: {
+		kind: "mask",
+		src: "/collection/termite.png",
+		ratio: 200 / 345,
+		scale: 0.45,
 	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
