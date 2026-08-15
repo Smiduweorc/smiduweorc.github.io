@@ -80,6 +80,11 @@ function SectionHeading({
 function HouseRules({ pinNotes }: { pinNotes: boolean }) {
 	const rules: { title: string; body: string; note: string }[] = [
 		{
+			title: "Insects first",
+			body: "Our project names, excluding github organization specail repos + page titles and template repositories, are always named after insects.",
+			note: "Everything you see on github is actually a mirror from our gitea server."
+		},
+		{
 			title: "Safe by default, not by reminder",
 			body: "A README that says \"remember to check the audience claim\" has already failed. If a mistake can be made impossible to write, that is where it gets handled: in the types, in the shape of the API, or at runtime. The docs are there to explain why, not to hold the railing up.",
 			note: "if the docs you to stay safe by being vigilant, the api is wrong.",
