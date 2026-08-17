@@ -80,9 +80,9 @@ function SectionHeading({
 function HouseRules({ pinNotes }: { pinNotes: boolean }) {
 	const rules: { title: string; body: string; note: string }[] = [
 		{
-			title: "One job each",
-			body: "None of this is a platform. Cephalote only looks at cryptography. Bagworm only opens a shell. Lacewing only handles tokens. A small tool is one you can actually finish, one you can read all of, and one you can drop when you stop needing it.",
-			note: "scope creep is how good tools die.",
+			title: "Insects first",
+			body: "We only name our projects after insects.",
+			note: "Except of course, special repos.",
 		},
 		{
 			title: "Safe by default, not by reminder",
