@@ -81,7 +81,7 @@ function HouseRules({ pinNotes }: { pinNotes: boolean }) {
 	const rules: { title: string; body: string; note: string }[] = [
 		{
 			title: "Insects first",
-			body: "We only name our projects after insects.",
+			body: "We only name our projects after insects. This is something that we strictly avoid compromising on. We love insects (except roaches) and our libraries will be named after them. We don't decide names at random, rather for specific reasons like lame puns or that the insect has a unique characteristic that is similar to the item.",
 			note: "Except of course, special repos.",
 		},
 		{
