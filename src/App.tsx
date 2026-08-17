@@ -81,7 +81,7 @@ function HouseRules({ pinNotes }: { pinNotes: boolean }) {
 	const rules: { title: string; body: string; note: string }[] = [
 		{
 			title: "Insects first",
-			body: "Our project names, excluding github organization special repos + page titles and template repositories, are always named after insects.",
+			body: "Our project names, excluding github organization specail repos + page titles and template repositories, are always named after insects.",
 			note: "Everything you see on github is actually a mirror from our gitea server."
 		},
 		{
