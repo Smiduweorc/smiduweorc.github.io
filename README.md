@@ -32,21 +32,23 @@ Node 24+. React, TypeScript, Vite, Tailwind v4.
 ### Adding a project
 
 Add an entry to `SPECIMENS` in `src/specimens.ts`. It shows up in the right
-drawer automatically. Set `inTank: true` to also put it in the vivarium (four
-walk around in there now, plus three ambient extras, and that is about the
-limit before the case gets crowded). Each one in the tank wants its own entry
-in the depth list in `Vivarium.tsx`, or two of them end up on the same floor
-line.
+drawer automatically. Set `inTank: true` to also put it in the vivarium (all
+eight of the finished projects walk around in there now, plus three ambient
+extras behind them, and the case is full). Each one in the tank wants its own
+entry in `TANK_DEPTH` in `Vivarium.tsx`, keyed by the specimen's `id`, or it
+falls back to the middle of the case and shares a floor line with whatever is
+already there.
 
-If the repo has its own `assets/logo.png`, add it to `SOURCES` in
-`scripts/build-artwork.py` and run the script; otherwise point `art` at one of
-the drawn-here fallbacks (`cocoon`, `grub`).
+If the repo has its own drawing at `assets/logo.png` or `assets/logo.jpeg`,
+add it to `SOURCES` in `scripts/build-artwork.py`, run the script, and add an
+`ARTWORK` entry with the ratio it prints; otherwise point `art` at one of the
+drawn-here fallbacks (`cocoon`, `grub`).
 
 ### Artwork
 
-The flagship repos each ship a hand-drawn side-on study at `assets/logo.png`:
-white line art on near-black. `scripts/build-artwork.py` fetches those and
-turns luminance into the alpha channel, so the site can paint them with
+Most repos ship a hand-drawn side-on study at `assets/logo.png` (a couple at
+`.jpeg`): white line art on near-black. `scripts/build-artwork.py` fetches
+those and turns luminance into the alpha channel, so the site can paint them with
 `background-color: currentColor` and have them sit at the right contrast on
 every palette. One file per animal, not one per animal per theme.
 
@@ -55,9 +57,11 @@ python3 scripts/build-artwork.py    # needs Pillow; writes public/collection/
 ```
 
 Output is committed, so a plain `npm ci && npm run build` never needs Python or
-the network. Bagworm's logo is cropped above the can, because the photographed
-can flattens into a grey slab when it becomes a mask while the worm above it
-does not.
+the network. Two are cropped, and `SOURCES` says why in each case: Bagworm's is
+cut above the can, because the photographed can flattens into a grey slab when
+it becomes a mask while the worm above it does not, and Repletes' is cut below
+the rule the ant hangs from, because luminance cannot tell the scenery and the
+starfield behind it from the animal.
 
 ## Deploying
 

@@ -18,7 +18,13 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { Plate, artworkRatio, artworkScale, type ArtworkKey } from "./artwork";
+import {
+	Plate,
+	artworkHangs,
+	artworkRatio,
+	artworkScale,
+	type ArtworkKey,
+} from "./artwork";
 import { tankSpecimens, type Specimen } from "../specimens";
 
 // ── Tuning ──────────────────────────────────────────────────────────
@@ -43,6 +49,8 @@ type Critter = {
 	specimen: Specimen | null; // null = ambient background critter
 	art: ArtworkKey;
 	width: number; // rendered width in px
+	height: number; // rendered height in px, from the drawing's ratio
+	flip: 1 | -1; // -1 for a drawing that has to be turned the right way up
 	depth: number; // 0 = at the glass, 1 = at the back wall
 	x: number; // px, centre
 	y: number; // px, feet
@@ -78,11 +86,34 @@ function usePrefersReducedMotion(): boolean {
 	return reduced;
 }
 
-/** Extras that fill the tank out. Too small to click, and unlabelled. */
+// One depth per flagship, so no two share a floor line.
+//
+// Keyed by id rather than indexed by position: a positional list has to be
+// kept the same length as the tank, and when it falls behind it wraps and
+// quietly stands two animals on the same line. Front of the case is for the
+// drawings that survive being shrunk least — Aphid is the thinnest linework
+// in the collection and disappears at the back wall — and the sturdy filled
+// ones take the distance.
+const TANK_DEPTH: Record<string, number> = {
+	lacewing: 0.12,
+	"dung-beetle-template": 0.21,
+	"aphid-template": 0.3,
+	bagworm: 0.39,
+	firefly: 0.48,
+	repletes: 0.57,
+	cephalote: 0.66,
+	// Furthest back on purpose: the tallest drawing in the case, and the
+	// distance takes the edge off it.
+	termite: 0.75,
+};
+
+/** Extras that fill the tank out. Too small to click, and unlabelled. They
+ *  sit behind every flagship, which is the only place left for them now the
+ *  collection fills the front of the case on its own. */
 const AMBIENT: { art: ArtworkKey; depth: number }[] = [
-	{ art: "grub", depth: 0.85 },
-	{ art: "cocoon", depth: 0.7 },
-	{ art: "grub", depth: 0.95 },
+	{ art: "grub", depth: 0.83 },
+	{ art: "cocoon", depth: 0.9 },
+	{ art: "grub", depth: 0.97 },
 ];
 
 export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
@@ -107,10 +138,9 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 				// lacewing you could hold in your hand, not one filling a
 				// vivarium.
 				width: Math.round(58 * artworkScale(s.art)),
-				// One depth per flagship, so no two share a floor line. The
-				// last one is furthest back on purpose: it is the tallest
-				// drawing in the case and the distance takes the edge off it.
-				depth: [0.15, 0.55, 0.35, 0.68][i % 4],
+				height: Math.round(58 * artworkScale(s.art)) / artworkRatio(s.art),
+				flip: artworkHangs(s.art) ? -1 : 1,
+				depth: TANK_DEPTH[s.id] ?? 0.5,
 				x: 0,
 				y: 0,
 				dir: i % 2 === 0 ? 1 : -1,
@@ -124,6 +154,8 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 				specimen: null,
 				art: a.art,
 				width: Math.round(58 * artworkScale(a.art)),
+				height: Math.round(58 * artworkScale(a.art)) / artworkRatio(a.art),
+				flip: artworkHangs(a.art) ? -1 : 1,
 				depth: a.depth,
 				x: 0,
 				y: 0,
@@ -149,10 +181,20 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 		const scale = 1 - c.depth * 0.32;
 		const bounce = Math.abs(Math.sin(c.gait)) * BOUNCE_PX;
 		const rock = Math.sin(c.gait * 0.5) * ROCK_DEG;
+		// A drawing of a hanging animal is mirrored vertically to stand it up.
+		// The transform origin is the bottom edge, so a bare negative y-scale
+		// would reflect the whole box straight down through the floor. Moving
+		// the box down by its own height first, in its own unscaled
+		// coordinates, lands it back where it started with the drawing the
+		// other way up. The horizontal flip for walking left still composes
+		// with it: two mirrors, not a rotation, so it never reads as an
+		// insect on its back.
+		const stand = c.flip === -1 ? ` translateY(${c.height}px)` : "";
 		c.el.style.transform =
 			`translate3d(${c.x - c.width / 2}px, ${c.y - bounce}px, 0) ` +
-			`rotate(${rock * c.dir}deg) ` +
-			`scale(${scale * c.dir}, ${scale})`;
+			`rotate(${rock * c.dir * c.flip}deg) ` +
+			`scale(${scale * c.dir}, ${scale * c.flip})` +
+			stand;
 	}, []);
 
 	const layout = useCallback(
@@ -335,11 +377,11 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 							onBlur={() => setHovered((h) => (h === c.key ? null : h))}
 							style={{
 								width: c.width,
-								height: c.width / artworkRatio(c.art),
+								height: c.height,
 								// Feet on the floor line, so `y` means the same
 								// thing for a long lacewing and a tall bagworm.
 								transformOrigin: "center bottom",
-								marginTop: -(c.width / artworkRatio(c.art)),
+								marginTop: -c.height,
 							}}
 							aria-label={`${c.specimen.name}: ${c.specimen.tagline}`}
 							className="vivarium-critter absolute left-0 top-0 cursor-pointer text-theme-text-secondary transition-colors hover:text-theme-accent focus:outline-none focus-visible:text-theme-accent"
@@ -359,9 +401,9 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 							aria-hidden="true"
 							style={{
 								width: c.width,
-								height: c.width / artworkRatio(c.art),
+								height: c.height,
 								transformOrigin: "center bottom",
-								marginTop: -(c.width / artworkRatio(c.art)),
+								marginTop: -c.height,
 							}}
 							className="vivarium-critter pointer-events-none absolute left-0 top-0 text-theme-comment/45"
 						>

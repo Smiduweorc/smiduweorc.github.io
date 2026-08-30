@@ -1,26 +1,33 @@
 // Specimen artwork.
 //
-// The org already draws its own animals: every flagship repo ships a
-// hand-drawn, side-on line study in assets/logo.png, and those are the real
+// The org already draws its own animals: most repos ship a hand-drawn,
+// side-on line study in assets/logo.png or .jpeg, and those are the real
 // thing: correct anatomy, correct number of legs, drawn by someone who was
 // looking at the animal. This site uses them rather than inventing a second,
 // worse set.
 //
-// Most are white line art on a near-black field (Termite's is filled, and drawn
-// from above rather than side-on), so they ship as alpha masks
+// Most are white line art on a near-black field (Termite's is filled and drawn
+// from above rather than side-on; Firefly and Repletes are line art with one
+// part filled in), so they ship as alpha masks
 // (built by scripts/build-artwork.py) and get painted with
 // `background-color: currentColor`. That means one file per animal instead of
 // one per animal per theme, and the linework always sits at the right contrast
 // against whichever palette is on.
 //
-// The four repos with no logo of their own get a plain SVG in the same
+// The repos with no logo of their own get a plain SVG in the same
 // single-weight line style. They are deliberately legless things, a cocoon
 // and a grub, because a drawing that never claims to have six legs can never
 // be caught having drawn them wrong.
 
 export type Artwork =
-	| { kind: "mask"; src: string; ratio: number; scale: number }
-	| { kind: "line"; draw: "cocoon" | "grub"; ratio: number; scale: number };
+	| { kind: "mask"; src: string; ratio: number; scale: number; hangs?: boolean }
+	| {
+			kind: "line";
+			draw: "cocoon" | "grub";
+			ratio: number;
+			scale: number;
+			hangs?: boolean;
+	  };
 
 // Ratios are the trimmed mask dimensions printed by build-artwork.py. They
 // only exist so layout can reserve the right box before the image loads.
@@ -56,6 +63,46 @@ export const ARTWORK = {
 		ratio: 200 / 345,
 		scale: 0.45,
 	},
+	// Same orange-on-near-black treatment as Termite: the linework masks as
+	// linework and the filled abdomen as a solid shape.
+	firefly: {
+		kind: "mask",
+		src: "/collection/firefly.png",
+		ratio: 572 / 330,
+		scale: 0.75,
+	},
+	// Cropped below the rule it hangs from, so what is left is the ant and
+	// the honeypot abdomen. See scripts/build-artwork.py for why.
+	//
+	// It is the one drawing of an animal that is not standing up: a replete
+	// spends its life hanging from the roof of the nest, and the logo draws
+	// it that way, feet up. That is the right way round on the card, where it
+	// is the repo's logo and nothing else. The tank has a floor, so there it
+	// gets turned over.
+	repletes: {
+		kind: "mask",
+		src: "/collection/repletes.png",
+		ratio: 620 / 330,
+		scale: 0.7,
+		hangs: true,
+	},
+	// The thinnest linework in the collection, and the only one with nothing
+	// filled in. Sized up from what an aphid's size next to a lacewing would
+	// argue for, because below about this the strokes stop reading as legs.
+	aphid: {
+		kind: "mask",
+		src: "/collection/aphid.png",
+		ratio: 456 / 211,
+		scale: 0.68,
+	},
+	// Two thirds of the drawing is the ball, so a width that matched the
+	// others would leave a beetle the size of the aphid pushing it.
+	"dung-beetle": {
+		kind: "mask",
+		src: "/collection/dung-beetle.png",
+		ratio: 550 / 367,
+		scale: 0.95,
+	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
 } as const satisfies Record<string, Artwork>;
@@ -69,6 +116,12 @@ export const artworkRatio = (key: ArtworkKey): number => ARTWORK[key].ratio;
  *  logos were drawn at whatever size suited each repo's README, not to a
  *  shared scale, so one formula over the aspect ratios cannot fix them. */
 export const artworkScale = (key: ArtworkKey): number => ARTWORK[key].scale;
+
+/** True for a drawing made of an animal hanging rather than standing. The
+ *  card shows the logo exactly as its repo drew it; only the vivarium, which
+ *  has a floor to stand on, turns it the right way up. */
+export const artworkHangs = (key: ArtworkKey): boolean =>
+	"hangs" in ARTWORK[key] && ARTWORK[key].hangs === true;
 
 // ── The two drawn-here ones ─────────────────────────────────────────
 // Single stroke weight, no fills, to sit beside the real logos without
