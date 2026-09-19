@@ -33,7 +33,7 @@ Node 24+. React, TypeScript, Vite, Tailwind v4.
 
 Add an entry to `SPECIMENS` in `src/specimens.ts`. It shows up in the right
 drawer automatically. Set `inTank: true` to also put it in the vivarium (all
-eight of the finished projects walk around in there now, plus three ambient
+ten of the finished projects walk around in there now, plus three ambient
 extras behind them, and the case is full). Each one in the tank wants its own
 entry in `TANK_DEPTH` in `Vivarium.tsx`, keyed by the specimen's `id`, or it
 falls back to the middle of the case and shares a floor line with whatever is

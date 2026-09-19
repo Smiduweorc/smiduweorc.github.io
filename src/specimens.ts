@@ -368,9 +368,83 @@ export const SPECIMENS: Specimen[] = [
 		links: [
 			{ label: "GitHub", href: `${GH}/Repletes` },
 			{ label: "npm", href: "https://www.npmjs.com/package/repletes" },
+			{ label: "Docs", href: "https://smiduweorc.github.io/Repletes/" },
 		],
 		note: "the caste that hangs from the nest roof as a living pantry.",
 		quip: "hangs there full of last week's answer, in case you ask again.",
+	},
+	{
+		id: "mycocepurus",
+		name: "mycocepurus-smithii",
+		binomial: "Mycocepurus idempotens",
+		kind: "library",
+		art: "mycocepurus",
+		inTank: true,
+		tagline:
+			"Makes a POST safe to send twice: one execution per Idempotency-Key, exact replay for every retry.",
+		description:
+			"The client sends an Idempotency-Key; the ledger claims it in one atomic store operation, runs your handler exactly once, and replays the stored response to every retry. A key reused with a different body is a hard conflict, and two copies arriving at once produce one execution and one 409, which is what the IETF draft says should happen. Retention, lease length and maximum key length are all required, because they are properties of your clients and your store, and scope is required too, so one client can never replay another's response by guessing. The only store shipped is an in-memory one for a single process and for tests: the contract is three methods, and the atomic one is SET NX in Redis. It sits after auth and before the handler. Firefly's retry on the client is what sends the second copy; this is the server holding the client to its promise that it is the same request.",
+		taxonomy: {
+			order: "TypeScript, ESM, Node 22+",
+			habitat: "the server side of a retried POST",
+			diet: "the same request, arriving twice",
+			stage: "released",
+			described: "September 2026",
+		},
+		tags: [
+			"TypeScript",
+			"idempotency",
+			"Idempotency-Key",
+			"IETF draft",
+			"HTTP",
+			"zero dependencies",
+		],
+		links: [
+			{ label: "GitHub", href: `${GH}/mycocepurus-smithii` },
+			{
+				label: "npm",
+				href: "https://www.npmjs.com/package/mycocepurus-smithii",
+			},
+			{
+				label: "Docs",
+				href: "https://smiduweorc.github.io/mycocepurus-smithii/",
+			},
+		],
+		note: "a fungus-farming ant with no males. every worker is a copy of the last, on purpose.",
+		quip: "already did that one. here's what happened last time.",
+	},
+	{
+		id: "phasmid",
+		name: "Phasmid",
+		binomial: "Carausius canonicus",
+		kind: "library",
+		art: "phasmid",
+		inTank: true,
+		tagline:
+			"Provider-aware email canonicalization, so equal mailboxes compare equal.",
+		description:
+			"Mail providers each have their own idea of which addresses reach the same mailbox: Gmail ignores dots and anything after a plus, and googlemail.com is gmail.com; Yahoo tags with a hyphen; AOL does not tag at all. Phasmid knows the rules for fifteen providers and returns one canonical string per mailbox, so a dedupe or a re-registration check can compare with ===. A domain it does not recognise gets the conservative treatment, domain lowercased and local part left alone, because RFC 5321 allows case-sensitive local parts and merging two real mailboxes by accident is worse than missing an alias. Every rule is overridable: add a provider, override a built-in by domain, replace the lot, or set a default rule for the domains it does not know. Runs in the browser and in Node, pure ESM, nothing at runtime.",
+		taxonomy: {
+			order: "TypeScript, ESM, browser and Node",
+			habitat: "signup forms and the users table behind them",
+			diet: "j.o.h.n+promo@googlemail.com",
+			stage: "released",
+			described: "September 2026",
+		},
+		tags: [
+			"TypeScript",
+			"email",
+			"normalization",
+			"canonicalization",
+			"zero dependencies",
+		],
+		links: [
+			{ label: "GitHub", href: `${GH}/phasmid` },
+			{ label: "npm", href: "https://www.npmjs.com/package/phasmid" },
+			{ label: "Docs", href: "https://smiduweorc.github.io/phasmid/" },
+		],
+		note: "looks like a twig. isn't. same trick an aliased address pulls.",
+		quip: "looks like a new user. isn't. i can tell.",
 	},
 ];
 

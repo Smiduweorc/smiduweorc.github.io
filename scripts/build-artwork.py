@@ -51,6 +51,10 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "collection")
 # the line drawings instead of matching them, which is the drawing's doing and
 # not the script's. Firefly and Repletes have the same orange on them and land
 # the same way: line art, with one part of the animal filled in.
+#
+# Mycocepurus has one green eye on it, dark enough that it masks as a dim spot
+# rather than a hole. Phasmid is the plainest source in the set: one stroke
+# weight, no fill, nothing to crop.
 SOURCES: dict[str, tuple[str, str, float, float]] = {
     "lacewing": ("lacewing", "logo.png", 0.0, 1.0),
     "Cephalote": ("cephalote", "logo.png", 0.0, 1.0),
@@ -60,6 +64,8 @@ SOURCES: dict[str, tuple[str, str, float, float]] = {
     "dung-beetle-template": ("dung-beetle", "logo.jpeg", 0.0, 1.0),
     "firefly": ("firefly", "logo.png", 0.0, 1.0),
     "Repletes": ("repletes", "logo.png", 0.31, 1.0),
+    "mycocepurus-smithii": ("mycocepurus", "logo.png", 0.0, 1.0),
+    "phasmid": ("phasmid", "logo.png", 0.0, 1.0),
 }
 
 # Pixels above this (post-normalisation) count as linework when finding the
