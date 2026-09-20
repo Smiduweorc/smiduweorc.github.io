@@ -95,9 +95,9 @@ function HouseRules({ pinNotes }: { pinNotes: boolean }) {
 			note: "benchmarks on a tuned dev machine are just bragging.",
 		},
 		{
-			title: "Tooling decided once",
-			body: "Three of these repos are empty templates: TypeScript, Python and native addons. Types, lint, changelogs, hooks and CI are set up before there is any code to put in them, because that is the part nobody wants to do again, and a standard you have to assemble by hand is one you will skip late at night.",
-			note: "the boring parts, settled in advance.",
+			title: "There is no SDLC or corporate pressure",
+			body: "There is a difference between writing code for work and for fun, we are the latter, but we validate our projects in environments vigourously and settings similar to the former. We don't care about securing a userbase and we don't want to use 'AGILE' or any of the corporate slop. There is never any pressure for us like that.",
+			note: "we do it for the love of the game",
 		},
 	];
 	return (
