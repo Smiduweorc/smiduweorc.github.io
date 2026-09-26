@@ -8,7 +8,8 @@
 //
 // Most are white line art on a near-black field (Termite's is filled and drawn
 // from above rather than side-on; Firefly and Repletes are line art with one
-// part filled in; Mycocepurus has a single green eye), so they ship as alpha masks
+// part filled in; Mycocepurus has a single green eye; Antlion is drawn from
+// above too, wings spread), so they ship as alpha masks
 // (built by scripts/build-artwork.py) and get painted with
 // `background-color: currentColor`. That means one file per animal instead of
 // one per animal per theme, and the linework always sits at the right contrast
@@ -53,8 +54,8 @@ export const ARTWORK = {
 		ratio: 171 / 142,
 		scale: 0.58,
 	},
-	// The only one drawn from above, so it is the only tall one: nearly twice
-	// as high as it is wide. Scaled off its height rather than its width, or a
+	// Drawn from above, and unlike Antlion it has no wings to spread, so it is
+	// the only tall one: nearly twice as high as it is wide. Scaled off its height rather than its width, or a
 	// width that matched the others would stand it head and shoulders over the
 	// whole case.
 	termite: {
@@ -120,6 +121,16 @@ export const ARTWORK = {
 		src: "/collection/phasmid.png",
 		ratio: 396 / 208,
 		scale: 0.7,
+	},
+	// Drawn from above like Termite, wings spread, so it is wide rather than
+	// tall. The wing mesh comes through as texture and the blue eyes as two
+	// dim spots. A grown antlion outspans a lacewing, so it gets about the
+	// same width despite the extra height.
+	antlion: {
+		kind: "mask",
+		src: "/collection/antlion.png",
+		ratio: 900 / 559,
+		scale: 0.95,
 	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },

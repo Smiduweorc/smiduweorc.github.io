@@ -96,15 +96,17 @@ function usePrefersReducedMotion(): boolean {
 // ones take the distance.
 const TANK_DEPTH: Record<string, number> = {
 	lacewing: 0.12,
-	"dung-beetle-template": 0.19,
-	"aphid-template": 0.26,
-	mycocepurus: 0.33,
-	bagworm: 0.4,
-	firefly: 0.47,
-	repletes: 0.54,
-	cephalote: 0.61,
+	// Right behind the lacewing it gets mistaken for.
+	antlion: 0.183,
+	"dung-beetle-template": 0.246,
+	"aphid-template": 0.309,
+	mycocepurus: 0.372,
+	bagworm: 0.435,
+	firefly: 0.498,
+	repletes: 0.561,
+	cephalote: 0.624,
 	// Thick enough to read from anywhere, so it takes the second-to-last line.
-	phasmid: 0.68,
+	phasmid: 0.687,
 	// Furthest back on purpose: the tallest drawing in the case, and the
 	// distance takes the edge off it.
 	termite: 0.75,

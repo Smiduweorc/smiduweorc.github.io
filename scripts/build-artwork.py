@@ -55,6 +55,10 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "collection")
 # Mycocepurus has one green eye on it, dark enough that it masks as a dim spot
 # rather than a hole. Phasmid is the plainest source in the set: one stroke
 # weight, no fill, nothing to crop.
+#
+# Antlion is drawn from above with its wings spread, like Termite's pose but
+# in white line art. The mesh inside each wing comes through as texture, which
+# makes it the heaviest file here, and the two blue eyes mask as dim spots.
 SOURCES: dict[str, tuple[str, str, float, float]] = {
     "lacewing": ("lacewing", "logo.png", 0.0, 1.0),
     "Cephalote": ("cephalote", "logo.png", 0.0, 1.0),
@@ -66,6 +70,7 @@ SOURCES: dict[str, tuple[str, str, float, float]] = {
     "Repletes": ("repletes", "logo.png", 0.31, 1.0),
     "mycocepurus-smithii": ("mycocepurus", "logo.png", 0.0, 1.0),
     "phasmid": ("phasmid", "logo.png", 0.0, 1.0),
+    "antlion": ("antlion", "logo.png", 0.0, 1.0),
 }
 
 # Pixels above this (post-normalisation) count as linework when finding the

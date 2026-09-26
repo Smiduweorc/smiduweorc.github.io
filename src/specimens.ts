@@ -446,6 +446,39 @@ export const SPECIMENS: Specimen[] = [
 		note: "looks like a twig. isn't. same trick an aliased address pulls.",
 		quip: "looks like a new user. isn't. i can tell.",
 	},
+	{
+		id: "antlion",
+		name: "Antlion",
+		binomial: "Myrmeleon possessor",
+		kind: "library",
+		art: "antlion",
+		inTank: true,
+		tagline:
+			"DPoP for Lacewing: the token, the proof and the key binding checked as one, or the request is refused.",
+		description:
+			"For resource servers that already verify access tokens with Lacewing and now need them bound to a key, which is what FAPI 2.0 asks for. It implements the resource-server side of RFC 9449: one call checks the access token through your Lacewing profile, the DPoP proof, the binding between them (cnf.jkt and ath), freshness and replay, in a fixed order with the cheap checks first and the replay store last. There is no proof-only verifier to call by mistake, the origin is configured rather than read from Host or X-Forwarded-*, and the replay store is required by the type, because no safe DPoP verifier is stateless. Server nonces are an HMAC, so every node with the same secret accepts them and nothing is stored. When it says no, it also writes the refusal: a 401 with a spec-correct WWW-Authenticate: DPoP challenge, and a typed reason code for your logs that the client never sees.",
+		taxonomy: {
+			order: "TypeScript, ESM only, Node 24+",
+			habitat: "resource servers, one step behind Lacewing",
+			diet: "tokens lifted off the wire, out of a log, or from a proxy",
+			stage: "pre-release",
+			described: "September 2026",
+		},
+		tags: [
+			"TypeScript",
+			"DPoP",
+			"RFC 9449",
+			"FAPI 2.0",
+			"OAuth",
+			"security",
+		],
+		links: [
+			{ label: "GitHub", href: `${GH}/antlion` },
+			{ label: "Docs", href: "https://smiduweorc.github.io/antlion/" },
+		],
+		note: "easy to mistake for a lacewing. isn't one. the larva digs the pit and lets the slope do the work.",
+		quip: "nice token. now prove it's yours.",
+	},
 ];
 
 export const byId = (id: string): Specimen | undefined =>
