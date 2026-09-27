@@ -88,7 +88,7 @@ export const SPECIMENS: Specimen[] = [
 			{ label: "npm", href: "https://www.npmjs.com/package/lacewing" },
 			{ label: "Docs", href: "https://Smiduweorc.github.io/lacewing/" },
 		],
-		note: "eats mosquitoes. and your bad auth code.",
+		note: "eats aphids. and your bad auth code.",
 		quip: "very strict. very fair. never lets the fakes in.",
 	},
 	{
