@@ -40,7 +40,7 @@ function Plaque() {
 					Half Code, Half Insect Documentary.
 				</p>
 				<p className="leading-relaxed text-theme-text-secondary">
-					We only build things that we feel annoyed about. We also mainly focus on DX tools and technical correctness.
+					Most of our projects only exist after being forced to implement something multiple times and we just like to save time.
 				</p>
 			</div>
 		</div>
