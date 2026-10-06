@@ -71,6 +71,8 @@ SOURCES: dict[str, tuple[str, str, float, float]] = {
     "mycocepurus-smithii": ("mycocepurus", "logo.png", 0.0, 1.0),
     "phasmid": ("phasmid", "logo.png", 0.0, 1.0),
     "antlion": ("antlion", "logo.png", 0.0, 1.0),
+    "leafcutter-ant": ("leafcutter-ant", "logo.png", 0.0, 1.0),
+    "darter": ("darter", "logo.jpeg", 0.0, 1.0),
 }
 
 # Pixels above this (post-normalisation) count as linework when finding the

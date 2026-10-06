@@ -132,6 +132,24 @@ export const ARTWORK = {
 		ratio: 900 / 559,
 		scale: 0.95,
 	},
+	// Side-on, carrying its leaf over its back, in a fine pencil stroke. The
+	// leaf is half the width, so it gets a little more than the ant alone
+	// would earn.
+	"leafcutter-ant": {
+		kind: "mask",
+		src: "/collection/leafcutter-ant.png",
+		ratio: 409 / 226,
+		scale: 0.75,
+	},
+	// Drawn from above, wings spread, like Antlion, and the abdomen runs off
+	// the bottom of the frame. Four wings make it read wide before it reads
+	// tall, so it sits a touch under the antlion.
+	darter: {
+		kind: "mask",
+		src: "/collection/darter.png",
+		ratio: 739 / 514,
+		scale: 0.85,
+	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
 } as const satisfies Record<string, Artwork>;
