@@ -40,15 +40,7 @@ function Plaque() {
 					Half Code, Half Insect Documentary.
 				</p>
 				<p className="leading-relaxed text-theme-text-secondary">
-					Developer tools and libraries that each do one job, named after the
-					animal that already does it. A{" "}
-					<span className="text-theme-text-primary">lacewing</span> eats the
-					things that ruin your garden. Ours eats forged tokens. It sticks in
-					your head better than{" "}
-					<code className="font-mono text-sm text-theme-comment">
-						jwt-utils-v2-final
-					</code>
-					.
+					We only build things that we feel annoyed about. We also mainly focus on DX tools and technical correctness.
 				</p>
 			</div>
 		</div>
