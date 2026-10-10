@@ -47,7 +47,7 @@ export const KIND_META: Record<Kind, { title: string; blurb: string }> = {
 	},
 	instrument: {
 		title: "Instruments",
-		blurb: "Command line tools. Things you run at your code.",
+		blurb: "Command line tools or their functional units. Things you run at your code.",
 	},
 	cast: {
 		title: "Casts",
@@ -143,6 +143,27 @@ export const SPECIMENS: Specimen[] = [
 		quip: "yeah. that's the one i live in.",
 	},
 
+	{
+		id: "bollworm",
+		name: "Bollworm",
+		binomial: "Helicoverpa documentaria",
+		kind: "instrument",
+		art: "bollworm",
+		tagline: "Turns an OpenAPI spec into the Word document someone asked for.",
+		description:
+			"Bollworm reads one OpenAPI 3.0, 3.1 or 3.2 file and writes a .docx that looks typed by a person: a title page, a contents page, an authentication chapter, a chapter per tag with a section per endpoint, and the data models, all in Word's own built-in styles. It follows $refs into other files, recursive ones included, and fetches $refs to https URLs only when you pass --allow-remote-refs. Every part of its output validates against the ECMA-376 schema, checked in CI. It never overwrites a file unless you pass --force.",
+		taxonomy: {
+			order: "Go, single static binary",
+			habitat: "the gap between an API and a manager who wants it in Word",
+			diet: "OpenAPI 3.0, 3.1 and 3.2, YAML or JSON",
+			stage: "pre-release",
+			described: "October 2026",
+		},
+		tags: ["Go", "OpenAPI", "docx", "documentation"],
+		links: [{ label: "GitHub", href: `${GH}/bollworm` }],
+		note: "a .docx is a zip with the work done inside it. so is a boll.",
+		quip: "it ate the spec. it's fine. there's a document now.",
+	},
 	{
 		id: "npm-package-template",
 		name: "npmPackageTemplate",
