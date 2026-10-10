@@ -86,7 +86,7 @@ export const SPECIMENS: Specimen[] = [
 		links: [
 			{ label: "GitHub", href: `${GH}/lacewing` },
 			{ label: "npm", href: "https://www.npmjs.com/package/lacewing" },
-			{ label: "Docs", href: "https://Smiduweorc.github.io/lacewing/" },
+			{ label: "Docs", href: "https://smiduweorc.github.io/lacewing/" },
 		],
 		note: "eats aphids. and your bad auth code.",
 		quip: "very strict. very fair. never lets the fakes in.",
@@ -459,12 +459,12 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"DPoP for Lacewing: the token, the proof and the key binding checked as one, or the request is refused.",
 		description:
-			"For resource servers that already verify access tokens with Lacewing and now need them bound to a key, which is what FAPI 2.0 asks for. It implements the resource-server side of RFC 9449: one call checks the access token through your Lacewing profile, the DPoP proof, the binding between them (cnf.jkt and ath), freshness and replay, in a fixed order with the cheap checks first and the replay store last. There is no proof-only verifier to call by mistake, the origin is configured rather than read from Host or X-Forwarded-*, and the replay store is required by the type, because no safe DPoP verifier is stateless. Server nonces are an HMAC, so every node with the same secret accepts them and nothing is stored. When it says no, it also writes the refusal: a 401 with a spec-correct WWW-Authenticate: DPoP challenge, and a typed reason code for your logs that the client never sees.",
+			"For resource servers that already verify access tokens with Lacewing and now need them bound to a key, which is what FAPI 2.0 asks for. It implements the resource-server side of RFC 9449: one call checks the access token through your Lacewing profile, the DPoP proof, the binding between them (cnf.jkt and ath), freshness and replay, in a fixed order with the cheap checks first and the replay store last. There is no proof-only verifier to call by mistake, the origin is configured rather than read from Host or X-Forwarded-*, and the replay store is required by the type, because no safe DPoP verifier is stateless. Redis and Postgres stores ship on their own subpaths. Server nonces are an HMAC, so every node with the same secret accepts them and nothing is stored. When it says no, it also writes the refusal: a 401 with a spec-correct WWW-Authenticate: DPoP challenge, and a typed reason code for your logs that the client never sees.",
 		taxonomy: {
 			order: "TypeScript, ESM only, Node 24+",
 			habitat: "resource servers, one step behind Lacewing",
 			diet: "tokens lifted off the wire, out of a log, or from a proxy",
-			stage: "pre-release",
+			stage: "released",
 			described: "September 2026",
 		},
 		tags: [
@@ -477,6 +477,7 @@ export const SPECIMENS: Specimen[] = [
 		],
 		links: [
 			{ label: "GitHub", href: `${GH}/antlion` },
+			{ label: "npm", href: "https://www.npmjs.com/package/antlion-lacewing" },
 			{ label: "Docs", href: "https://smiduweorc.github.io/antlion/" },
 		],
 		note: "easy to mistake for a lacewing. isn't one. the larva digs the pit and lets the slope do the work.",
