@@ -149,6 +149,7 @@ export const SPECIMENS: Specimen[] = [
 		binomial: "Helicoverpa documentaria",
 		kind: "instrument",
 		art: "bollworm",
+		inTank: true,
 		tagline: "Turns an OpenAPI spec into the Word document someone asked for.",
 		description:
 			"Bollworm reads one OpenAPI 3.0, 3.1 or 3.2 file and writes a .docx that looks typed by a person: a title page, a contents page, an authentication chapter, a chapter per tag with a section per endpoint, and the data models, all in Word's own built-in styles. It follows $refs into other files, recursive ones included, and fetches $refs to https URLs only when you pass --allow-remote-refs. Every part of its output validates against the ECMA-376 schema, checked in CI. It never overwrites a file unless you pass --force.",

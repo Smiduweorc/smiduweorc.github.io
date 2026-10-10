@@ -101,6 +101,9 @@ const TANK_DEPTH: Record<string, number> = {
 	// Fine pencil, and small: it gets lost any further back.
 	"leafcutter-ant": 0.225,
 	darter: 0.2775,
+	// Segmented and medium weight: between the fine pencil at the front and
+	// the solid beetle behind it.
+	bollworm: 0.3038,
 	"dung-beetle-template": 0.33,
 	"aphid-template": 0.3825,
 	mycocepurus: 0.435,

@@ -156,7 +156,7 @@ function App() {
 			{/* No hero block. The case comes first and the wall label sits
 			    under it, so the first thing on the page is the thing the page
 			    is about, already moving. */}
-			<div className="mx-auto max-w-4xl px-5 pt-6 sm:pt-8">
+			<div className="mx-auto max-w-6xl px-5 pt-6 sm:pt-8">
 				<Vivarium onOpen={openSpecimen} />
 			</div>
 			<div className="mx-auto mt-6 max-w-4xl sm:px-5">
