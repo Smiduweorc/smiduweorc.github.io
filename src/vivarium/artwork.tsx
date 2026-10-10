@@ -150,6 +150,15 @@ export const ARTWORK = {
 		ratio: 739 / 514,
 		scale: 0.85,
 	},
+	// Side-on, segmented from head to tail, in the same single-weight line as
+	// the rest. Long and low, so it takes a little less width than the ant
+	// alone would, and the segments stay legible at the card's size.
+	bollworm: {
+		kind: "mask",
+		src: "/collection/bollworm.png",
+		ratio: 573 / 399,
+		scale: 0.8,
+	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
 } as const satisfies Record<string, Artwork>;
