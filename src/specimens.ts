@@ -74,7 +74,7 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "A JWT library that won't let you make the usual JWT mistakes.",
 		description:
-			"You define a verification profile once, and it makes you fill in the issuer, audience, algorithm list and key source. Every verify call then goes through it. There is no low-level mode to get wrong. On top of that you get remote JWKS with caching and rotation, token revocation, secure cookie helpers, and encrypted tokens. What RFC 8725 says you must do is checked by the types or at runtime, instead of sitting in the docs as advice.",
+			"You define a verification profile once, and it makes you fill in the issuer, audience, algorithm list and key source. Every verify call then goes through it. There is no low-level mode to get wrong. On top of that you get remote JWKS with caching and rotation, token revocation, access and refresh token presets, secure cookie and bearer helpers, and encrypted tokens. A remote JWKS that goes down keeps serving its last good keys for a bounded window and then fails closed, and secrets in a payload are caught at sign time. What RFC 8725 says you must do is checked by the types or at runtime, instead of sitting in the docs as advice. Insecure use is still possible, but only through unsafe-prefixed escape hatches that are easy to grep for in review.",
 		taxonomy: {
 			order: "TypeScript, ESM only, Node 24+",
 			habitat: "anything that hands out or checks tokens",
@@ -100,7 +100,7 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "Finds the weak crypto in your code and tells you where it is.",
 		description:
-			"Cephalote reads a source tree and reports broken or ageing cryptography: MD5, SHA-1, DES, RC4, undersized RSA keys, keys pasted straight into the source. It is one static binary with nothing to install, so it drops into CI or onto a server as is. Output can be text, JSON or SARIF, and --exit-code fails the build when it finds something. Go gets a real AST; everything else goes through Tree-sitter.",
+			"Cephalote reads a source tree and reports broken or ageing cryptography: MD5, SHA-1, DES, RC4, undersized RSA keys, keys pasted straight into the source. It is one static binary with nothing to install, so it drops into CI or onto a server as is. Output can be text, JSON or SARIF, and --exit-code fails the build when it finds something. Go gets a real AST, thirteen other languages go through Tree-sitter, and anything else gets a lower-confidence regex pass over a catalogue of 50+ algorithms. --scheme turns it into a search for where a given algorithm is still used, and a YAML config and inline cephalote:ignore comments cover exclusions and suppressions.",
 		taxonomy: {
 			order: "Go, single static binary",
 			habitat: "CI pipelines and pre-commit hooks",
@@ -127,7 +127,7 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "Carries your dev shell into a container on any runtime.",
 		description:
-			"Put a bagworm.yaml in your project with one line saying which image you want, then run bagworm enter from anywhere in the tree. You get a shell in that container. Files you create inside belong to you on the host, and the container is thrown away when you leave. It behaves the same on Docker, nerdctl and podman, which is the whole reason it exists. A typo in the config is a real error that names the key and the line, not a silent shrug.",
+			"Put a bagworm.yaml in your project with one line saying which image you want, then run bagworm enter from anywhere in the tree. You get a shell in that container. Files you create inside belong to you on the host, and the container is thrown away when you leave. It behaves the same on Docker, nerdctl and podman, which is the whole reason it exists. A config only runs once you have approved it, and again after any change to it. Your git, ssh and gh credentials are mounted read-only, and only if the config asks for them. A typo in the config is a real error that names the key and the line, not a silent shrug.",
 		taxonomy: {
 			order: "Go",
 			habitat: "docker, nerdctl and podman",
@@ -153,16 +153,20 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "Turns an OpenAPI spec into the Word document someone asked for.",
 		description:
-			"Bollworm reads one OpenAPI 3.0, 3.1 or 3.2 file and writes a .docx that looks typed by a person: a title page, a contents page, an authentication chapter, a chapter per tag with a section per endpoint, and the data models, all in Word's own built-in styles. It follows $refs into other files, recursive ones included, and fetches $refs to https URLs only when you pass --allow-remote-refs. Every part of its output validates against the ECMA-376 schema, checked in CI. It never overwrites a file unless you pass --force.",
+			"Bollworm reads one OpenAPI 3.0, 3.1 or 3.2 file and writes a .docx that looks typed by a person: a title page, a contents page, an authentication chapter, a chapter per tag with a section per endpoint, a webhooks chapter, and the data models, all in Word's own built-in styles. It follows $refs into other files, recursive ones included, and fetches $refs to https URLs only when you pass --allow-remote-refs. Every part of its output validates against the ECMA-376 schema, checked in CI. It never overwrites a file unless you pass --force, and it writes A4 or Letter.",
 		taxonomy: {
 			order: "Go, single static binary",
 			habitat: "the gap between an API and a manager who wants it in Word",
 			diet: "OpenAPI 3.0, 3.1 and 3.2, YAML or JSON",
-			stage: "pre-release",
+			stage: "released",
 			described: "October 2026",
 		},
 		tags: ["Go", "OpenAPI", "docx", "documentation"],
-		links: [{ label: "GitHub", href: `${GH}/bollworm` }],
+		links: [
+			{ label: "GitHub", href: `${GH}/bollworm` },
+			{ label: "Releases", href: `${GH}/bollworm/releases` },
+			{ label: "AUR", href: "https://aur.archlinux.org/packages/bollworm" },
+		],
 		note: "a .docx is a zip with the work done inside it. so is a boll.",
 		quip: "it ate the spec. it's fine. there's a document now.",
 	},
@@ -194,7 +198,7 @@ export const SPECIMENS: Specimen[] = [
 		art: "cocoon",
 		tagline: "The same skeleton, in Python.",
 		description:
-			"Hatchling for packaging, mypy in strict mode, ruff for lint and formatting, and the standard library's unittest. Conventional commits feed git-cliff changelogs, lefthook installs the hooks, and GitHub Actions runs lint and tests. A release script bumps the version, regenerates the changelog and tags it.",
+			"Hatchling for packaging, mypy in strict mode, ruff for lint and formatting, and the standard library's unittest. Conventional commits feed git-cliff changelogs and are checked by a regex in the commit-msg hook, so no Node toolchain is involved. Lefthook installs the hooks, and GitHub Actions runs lint and tests. A release script bumps the version, regenerates the changelog and tags it.",
 		taxonomy: {
 			order: "Python",
 			habitat: "the first ten minutes of a new package",
@@ -214,17 +218,17 @@ export const SPECIMENS: Specimen[] = [
 		art: "cocoon",
 		tagline: "A native addon skeleton: C++ underneath, a typed import on top.",
 		description:
-			"The least reached-for of the three templates, and the biggest time saver when you do need it. A C++ addon built by node-gyp, wrapped in a typed ESM entry point that loads the binary through createRequire, because .node files can't be imported as ESM and everyone finds that out the hard way. Jest runs against the built addon rather than a mock of it. Same tooling as the other two.",
+			"Less a polished template than a learning repo that works as one, and it still describes itself that way. A C++ addon built by node-gyp, wrapped in a typed ESM entry point that loads the binary through createRequire, because .node files can't be imported as ESM and everyone finds that out the hard way. Jest runs against the built addon rather than a mock of it. Also fitted: ESLint, TypeDoc, commitlint, git-cliff, lefthook and clang-format on the C++.",
 		taxonomy: {
 			order: "C++ and TypeScript, via N-API",
 			habitat: "when a hot path stops being fast enough in JavaScript",
 			diet: "node-gyp incantations",
-			stage: "template",
+			stage: "playground",
 			described: "June 2026",
 		},
 		tags: ["C++", "N-API", "node-gyp", "native addons", "template"],
 		links: [{ label: "GitHub", href: `${GH}/nodeaddons` }],
-		note: "least used of the three. most time saved when it is.",
+		note: "still figuring it out, and says so.",
 	},
 	{
 		id: "termite",
@@ -236,7 +240,7 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"A feedback board and release tracker for projects that ship in versions.",
 		description:
-			"A public board where anyone can post an idea or a bug and raise a hand for someone else's, with no signup form anywhere: accounts exist so that somebody can be the maintainer, and a visitor never needs one. An item is open, planned, shipped or declined, and that is the whole lifecycle. There is no \"in progress\", because nobody owes you a status update on a side project, and a declined item keeps its reason and stays on the board so the same request doesn't arrive four more times. The maintainer plans a version, opens its merge window, pulls items into it and ships the lot in one step; a planned release is allowed no date at all, because \"eventually\" is an honest answer and a fake date isn't. Underneath: Bun, Elysia, tRPC and Drizzle over Postgres, with a Vue front end.",
+			"A public board where anyone can post an idea or a bug and raise a hand for someone else's, with no signup form anywhere: accounts exist so that somebody can be the maintainer, and a visitor never needs one. An item is open, planned, shipped or declined, and that is the whole lifecycle. There is no \"in progress\", because nobody owes you a status update on a side project, and a declined item keeps its reason and stays on the board so the same request doesn't arrive four more times. The maintainer plans a version, opens its merge window, pulls items into it and ships the lot in one step; a planned release is allowed no date at all, because \"eventually\" is an honest answer and a fake date isn't. The maintainer also gets private task boards, as a list or a kanban with columns named whatever the work is called, that can be published and copied as templates. It ships as two Docker images for amd64 and arm64 with a compose file, and the same services are exposed over gRPC for release scripts. Underneath: Bun, Elysia, tRPC and Drizzle over Postgres, with a Vue front end.",
 		taxonomy: {
 			order: "TypeScript on Bun, Vue front end",
 			habitat: "your own box, usually behind your own wireguard",
@@ -320,9 +324,9 @@ export const SPECIMENS: Specimen[] = [
 		art: "firefly",
 		inTank: true,
 		tagline:
-			"Retries, deadlines, breakers and bulkheads for one process, with no defaults.",
+			"Retries, deadlines, breakers, bulkheads, rate limits and hedges for one process, with no defaults.",
 		description:
-			"You describe an upstream once as a Dependency, then call through it. Attempts, backoff, deadline and breaker thresholds are all required, because they are properties of your traffic rather than of the package, and shouldRetry has no default at all: a 409 is fatal to one caller and expected by another, so the types will not let you skip the question. A policy wraps a unit of work and hands back the same shape, so policies nest and a stack of them is still one function you call; stack throws on an arrangement that cannot work. Every attempt gets an AbortSignal, so a deadline aborts the attempt instead of only giving up on waiting for it, and when the attempts run out your error comes back unchanged.",
+			"You describe an upstream once as a Dependency, then call through it. Attempts, backoff, deadline and breaker thresholds are all required, because they are properties of your traffic rather than of the package, and shouldRetry has no default at all: a 409 is fatal to one caller and expected by another, so the types will not let you skip the question. A policy wraps a unit of work and hands back the same shape, so policies nest and a stack of them is still one function you call; stack throws on an arrangement that cannot work. Every attempt gets an AbortSignal, so a deadline aborts the attempt instead of only giving up on waiting for it, and when the attempts run out your error comes back unchanged. Per call you can share one request between twenty callers or supply a fallback, a transport wraps any fetch-shaped function so an HTTP client never imports it, and a health read reports the circuit without changing it.",
 		taxonomy: {
 			order: "TypeScript, ESM, Node 22+",
 			habitat: "one process, with no service mesh under it",
@@ -354,7 +358,7 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "A cache policy engine: serve, refresh, replace or rethrow.",
 		description:
-			"You supply the key, the store and the freshness and retention windows, and Repletes decides what a read does. Fresh, it serves. Stale, it serves and refreshes behind, one refresh per key, never awaited and never an unhandled rejection. Retained, it serves only if the action failed. The stale-while-revalidate and stale-if-error semantics follow RFC 5861, and read hands back the state alongside the value, so a caller can tell a fresh answer from one that survived an upstream failure. It is not an HTTP cache and ships no transport. There is no way to prime it either, because every entry's windows describe an action that actually completed.",
+			"You supply the key, the store and the freshness and retention windows, and Repletes decides what a read does. Fresh, it serves. Stale, it serves and refreshes behind, one refresh per key, never awaited and never an unhandled rejection. Retained, it serves only if the action failed. The stale-while-revalidate and stale-if-error semantics are inspired by RFC 5861, fromCacheControl reads a Cache-Control header off anything shaped like a response, and read hands back the state alongside the value, so a caller can tell a fresh answer from one that survived an upstream failure. It is not an HTTP cache and ships no transport. There is no way to prime it either, because every entry's windows describe an action that actually completed.",
 		taxonomy: {
 			order: "TypeScript, ESM, Node 22+",
 			habitat: "in front of anything async and expensive",
@@ -387,7 +391,7 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"Makes a POST safe to send twice: one execution per Idempotency-Key, exact replay for every retry.",
 		description:
-			"The client sends an Idempotency-Key; the ledger claims it in one atomic store operation, runs your handler exactly once, and replays the stored response to every retry. A key reused with a different body is a hard conflict, and two copies arriving at once produce one execution and one 409, which is what the IETF draft says should happen. Retention, lease length and maximum key length are all required, because they are properties of your clients and your store, and scope is required too, so one client can never replay another's response by guessing. The only store shipped is an in-memory one for a single process and for tests: the contract is three methods, and the atomic one is SET NX in Redis. It sits after auth and before the handler. Firefly's retry on the client is what sends the second copy; this is the server holding the client to its promise that it is the same request.",
+			"The client sends an Idempotency-Key; the ledger claims it in one atomic store operation, runs your handler exactly once, and replays the stored response to every retry. A key reused with a different body is refused as a 422, a missing key as a 400, and two copies arriving at once produce one execution and one 409, which is what the IETF draft says should happen. The draft has expired, but it is still the best reference there is. Retention, lease length and maximum key length are all required, because they are properties of your clients and your store, and scope is required too, so one client can never replay another's response by guessing. The only store shipped is an in-memory one for a single process and for tests: the contract is three methods, and the atomic one is SET NX in Redis. It sits after auth and before the handler. Firefly's retry on the client is what sends the second copy; this is the server holding the client to its promise that it is the same request.",
 		taxonomy: {
 			order: "TypeScript, ESM, Node 22+",
 			habitat: "the server side of a retried POST",
@@ -427,7 +431,7 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"Provider-aware email canonicalization, so equal mailboxes compare equal.",
 		description:
-			"Mail providers each have their own idea of which addresses reach the same mailbox: Gmail ignores dots and anything after a plus, and googlemail.com is gmail.com; Yahoo tags with a hyphen; AOL does not tag at all. Phasmid knows the rules for fifteen providers and returns one canonical string per mailbox, so a dedupe or a re-registration check can compare with ===. A domain it does not recognise gets the conservative treatment, domain lowercased and local part left alone, because RFC 5321 allows case-sensitive local parts and merging two real mailboxes by accident is worse than missing an alias. Every rule is overridable: add a provider, override a built-in by domain, replace the lot, or set a default rule for the domains it does not know. Runs in the browser and in Node, pure ESM, nothing at runtime.",
+			"Mail providers each have their own idea of which addresses reach the same mailbox: Gmail ignores dots and anything after a plus, and googlemail.com is gmail.com; Yahoo tags with a hyphen; AOL does not tag at all. Phasmid knows the rules for fifteen providers and returns one canonical string per mailbox, so a dedupe or a re-registration check can compare with ===. A domain it does not recognise gets the conservative treatment, domain lowercased and local part left alone, because RFC 5321 allows case-sensitive local parts and merging two real mailboxes by accident is worse than missing an alias. Every rule is overridable: add a provider, override a built-in by domain, replace the lot, or set a default rule for the domains it does not know. Runs in the browser and in Node, pure ESM, nothing at runtime. Beyond normalizeEmail there is isSameEmail, a detailed form that reports the provider and the stripped tag, and malformed input comes back trimmed and flagged invalid rather than throwing.",
 		taxonomy: {
 			order: "TypeScript, ESM, browser and Node",
 			habitat: "signup forms and the users table behind them",
@@ -513,7 +517,7 @@ export const SPECIMENS: Specimen[] = [
 		art: "cocoon",
 		tagline: "A Rust workspace on the same tasks, hooks and release flow.",
 		description:
-			"Where a Rust project here starts: a library crate that holds the program and a thin CLI crate that calls it, strict clippy, tabs, and CI on Linux, macOS and Windows. It has no runtime dependencies and adds none, and leaves out Deno FFI, WASM and other host glue, which the project that needs one adds as its own crate. Every task goes through one scripts/tasks.sh, so just, the git hooks and CI cannot drift apart, and every cargo call passes --locked. Every crate starts with publish = false.",
+			"Where a Rust project here starts: a library crate that holds the program and a thin CLI crate that calls it, strict clippy, tabs, and CI on Linux, macOS and Windows. It has no runtime dependencies and adds none, and leaves out Deno FFI, WASM and other host glue, which the project that needs one adds as its own crate. mise installs the pinned toolchain, including commitlint-rs for the commit rules. Every task goes through one scripts/tasks.sh, so just, the git hooks and CI cannot drift apart, and every cargo call passes --locked. Every crate starts with publish = false.",
 		taxonomy: {
 			order: "Rust, Cargo workspace",
 			habitat: "the first ten minutes of a new crate",
