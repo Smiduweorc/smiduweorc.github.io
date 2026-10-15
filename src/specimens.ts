@@ -112,6 +112,7 @@ export const SPECIMENS: Specimen[] = [
 		links: [
 			{ label: "GitHub", href: `${GH}/Cephalote` },
 			{ label: "Releases", href: `${GH}/Cephalote/releases` },
+			{ label: "Benchmarks", href: `${GH}/Cephalote-Bench` },
 			{ label: "AUR", href: "https://aur.archlinux.org/packages/cephalote" },
 		],
 		note: "turtle ants plug the nest door with their own heads. so does this.",
@@ -564,7 +565,13 @@ export const SPECIMENS: Specimen[] = [
 			described: "October 2026",
 		},
 		tags: ["Dart", "Flutter", "template", "lefthook", "git-cliff"],
-		links: [{ label: "GitHub", href: `${GH}/flutter-dep-template` }],
+		links: [
+			{ label: "GitHub", href: `${GH}/flutter-dep-template` },
+			{
+				label: "Docs",
+				href: "https://smiduweorc.github.io/flutter-dep-template/",
+			},
+		],
 		note: "dart format won't do tabs. this is the one repo that lost that fight.",
 	},
 	{
