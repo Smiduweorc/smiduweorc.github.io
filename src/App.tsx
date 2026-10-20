@@ -40,7 +40,7 @@ function Plaque() {
 					Half Code, Half Insect Documentary.
 				</p>
 				<p className="leading-relaxed text-theme-text-secondary">
-					Most of our projects only exist after being forced to implement something multiple times and we just like to save time.
+					Most of our projects only exist after being forced to implement something multiple times and we just like to save time. (Also, we do not focus on cybersecurity.)
 				</p>
 			</div>
 		</div>
