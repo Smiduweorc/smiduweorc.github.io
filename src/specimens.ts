@@ -151,17 +151,17 @@ export const SPECIMENS: Specimen[] = [
 		kind: "instrument",
 		art: "bollworm",
 		inTank: true,
-		tagline: "Turns an OpenAPI spec into the Word document someone asked for.",
+		tagline: "Turns an API spec into the Word document someone asked for.",
 		description:
-			"Bollworm reads one OpenAPI 3.0, 3.1 or 3.2 file and writes a .docx that looks typed by a person: a title page, a contents page, an authentication chapter, a chapter per tag with a section per endpoint, a webhooks chapter, and the data models, all in Word's own built-in styles. It follows $refs into other files, recursive ones included, and fetches $refs to https URLs only when you pass --allow-remote-refs. Every part of its output validates against the ECMA-376 schema, checked in CI. It never overwrites a file unless you pass --force, and it writes A4 or Letter.",
+			"Bollworm reads the three ways an API is usually written down: an OpenAPI 3.0, 3.1 or 3.2 spec, an OpenRPC 1.x spec for JSON-RPC, or the gRPC services in a .proto file or a FileDescriptorSet. From any of them it writes a .docx that looks typed by a person: a title page, a contents page, an introduction, a chapter per group of calls with a section per call, and the data models, all in Word's own built-in styles, or in a company template's via --reference-doc. It follows $refs into other files and fetches https ones only when you pass --allow-remote-refs. It never connects to the API it documents, never overwrites a file unless you pass --force, and writes A4 or Letter.",
 		taxonomy: {
 			order: "Go, single static binary",
 			habitat: "the gap between an API and a manager who wants it in Word",
-			diet: "OpenAPI 3.0, 3.1 and 3.2, YAML or JSON",
+			diet: "OpenAPI 3.x, OpenRPC 1.x, and gRPC .proto files or descriptor sets",
 			stage: "released",
 			described: "October 2026",
 		},
-		tags: ["Go", "OpenAPI", "docx", "documentation"],
+		tags: ["Go", "OpenAPI", "OpenRPC", "gRPC", "docx", "documentation"],
 		links: [
 			{ label: "GitHub", href: `${GH}/bollworm` },
 			{ label: "Releases", href: `${GH}/bollworm/releases` },
