@@ -603,6 +603,39 @@ export const SPECIMENS: Specimen[] = [
 		note: "a dragonfly. eats aphids, as it happens.",
 		quip: "fast, and it only ever goes the one way.",
 	},
+	{
+		id: "argia",
+		name: "Argia",
+		binomial: "Argia duplicans",
+		kind: "library",
+		art: "argia",
+		inTank: true,
+		tagline: "Change embedding models without a flag day.",
+		description:
+			"You give it two profiles, each an embedding model plus the vector store that holds its vectors. Writes go to both; reads go to whichever one the current phase says. In compare, a chosen share of queries also run against the other side, and both hit lists come back to you with their scores, so you decide what ready means. Move the phase when the new index looks good, and move it back if it doesn't. Every document and delete carries a version and a store keeps the higher one, so a backfill of an old copy cannot overwrite a newer write. A conformance check tests your store adapter against that rule. It does not copy vectors between databases, ship store adapters, or decide when you are ready.",
+		taxonomy: {
+			order: "TypeScript, ESM, Node 22+",
+			habitat: "a RAG pipeline halfway between two embedding models",
+			diet: "documents, twice",
+			stage: "released",
+			described: "October 2026",
+		},
+		tags: [
+			"TypeScript",
+			"RAG",
+			"embeddings",
+			"vector stores",
+			"migration",
+			"zero dependencies",
+		],
+		links: [
+			{ label: "GitHub", href: `${GH}/Argia` },
+			{ label: "npm", href: "https://www.npmjs.com/package/argia-migrator" },
+			{ label: "Docs", href: "https://smiduweorc.github.io/Argia/" },
+		],
+		note: "a damselfly. two wings either side, one body, and it only ever lands in one place at a time.",
+		quip: "writes to both ponds. drinks from whichever one you say.",
+	},
 ];
 
 export const byId = (id: string): Specimen | undefined =>

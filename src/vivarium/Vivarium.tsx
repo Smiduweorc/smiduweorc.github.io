@@ -95,6 +95,8 @@ function usePrefersReducedMotion(): boolean {
 // in the collection and disappears at the back wall — and the sturdy filled
 // ones take the distance.
 const TANK_DEPTH: Record<string, number> = {
+	// Fine pencil like the leafcutter, so it takes the glass.
+	argia: 0.0675,
 	lacewing: 0.12,
 	// Right behind the lacewing it gets mistaken for.
 	antlion: 0.1725,

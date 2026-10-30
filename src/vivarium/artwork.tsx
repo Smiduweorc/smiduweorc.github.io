@@ -159,6 +159,15 @@ export const ARTWORK = {
 		ratio: 573 / 399,
 		scale: 0.8,
 	},
+	// Side-on, perched on a twig, in fine pencil with a meshed wing. The cut
+	// takes the lower of the two perch lines so only the twig it sits on is
+	// left. Long and thin, so it wants a little less width than the lacewing.
+	argia: {
+		kind: "mask",
+		src: "/collection/argia.png",
+		ratio: 672 / 261,
+		scale: 0.85,
+	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
 } as const satisfies Record<string, Artwork>;

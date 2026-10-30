@@ -52,6 +52,10 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "collection")
 # not the script's. Firefly and Repletes have the same orange on them and land
 # the same way: line art, with one part of the animal filled in.
 #
+# Argia is drawn perched on two long lines, and luminance would keep both. The
+# cut is above the lower one, which leaves the twig it sits on and loses only
+# scenery. Its two green eyes mask as dim spots.
+#
 # Mycocepurus has one green eye on it, dark enough that it masks as a dim spot
 # rather than a hole. Phasmid is the plainest source in the set: one stroke
 # weight, no fill, nothing to crop.
@@ -74,6 +78,7 @@ SOURCES: dict[str, tuple[str, str, float, float]] = {
     "leafcutter-ant": ("leafcutter-ant", "logo.png", 0.0, 1.0),
     "darter": ("darter", "logo.jpeg", 0.0, 1.0),
     "bollworm": ("bollworm", "logo.png", 0.0, 1.0),
+    "Argia": ("argia", "logo.png", 0.0, 0.71),
 }
 
 # Pixels above this (post-normalisation) count as linework when finding the

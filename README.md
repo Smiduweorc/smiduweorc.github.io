@@ -33,7 +33,7 @@ Node 24+. React, TypeScript, Vite, Tailwind v4.
 
 Add an entry to `SPECIMENS` in `src/specimens.ts`. It shows up in the right
 drawer automatically. Set `inTank: true` to also put it in the vivarium (all
-thirteen of the projects with drawings walk around in there now, plus three ambient
+fifteen of the projects with drawings walk around in there now, plus three ambient
 extras behind them, and the case is full). Each one in the tank wants its own
 entry in `TANK_DEPTH` in `Vivarium.tsx`, keyed by the specimen's `id`, or it
 falls back to the middle of the case and shares a floor line with whatever is
@@ -57,11 +57,12 @@ python3 scripts/build-artwork.py    # needs Pillow; writes public/collection/
 ```
 
 Output is committed, so a plain `npm ci && npm run build` never needs Python or
-the network. Two are cropped, and `SOURCES` says why in each case: Bagworm's is
+the network. Three are cropped, and `SOURCES` says why in each case: Bagworm's is
 cut above the can, because the photographed can flattens into a grey slab when
 it becomes a mask while the worm above it does not, and Repletes' is cut below
 the rule the ant hangs from, because luminance cannot tell the scenery and the
-starfield behind it from the animal.
+starfield behind it from the animal. Argia's is cut above the lower of the two
+lines it perches on, for the same reason.
 
 ## Deploying
 
