@@ -1,10 +1,22 @@
 // The vivarium: a glass tank with the flagship projects living in it.
 //
-// The org's own artwork is drawn side-on, so the tank is a side-on view too:
-// the animals walk the floor rather than crawling around a top-down plan.
-// Walking left flips the drawing instead of rotating it, which is the only
-// honest thing to do with a side view: a rotated side view reads as a dead
-// insect on its back.
+// The drawings come in two views, and the view decides how an animal may
+// move. Most are side-on, and a side view can only be mirrored, never turned
+// round: rotate one far and it reads as an insect dead on its back. Those
+// walk the floor. Antlion, Darter and Termite are drawn from above, and a
+// view from above can face any way at all, so those three climb the glass,
+// mostly up and down because that is the way they are drawn. Firefly flies.
+//
+// Sizes and speeds come from the animals, not from the layout. Each one is
+// drawn at its real body length, squashed by a square root so an aphid is
+// still something you can click next to a stick insect, and each moves at a
+// pace that suits it: ants hurry, the caterpillar and the stick insect take
+// their time. Nothing moves continuously. Real insects go in bursts, stop,
+// think, and set off again, and a tank of things gliding at constant speed
+// reads as a screensaver.
+//
+// The dung beetle has a job. It rolls a ball of dung that grows as it goes,
+// parks it in the cave at the right-hand wall, and wanders off for another.
 //
 // One requestAnimationFrame loop writes transforms straight onto the DOM
 // nodes. Per-frame React state for a handful of critters would re-render the
@@ -22,43 +34,148 @@ import {
 	Plate,
 	artworkHangs,
 	artworkRatio,
-	artworkScale,
 	type ArtworkKey,
 } from "./artwork";
+import { Boll, CaveInside, CaveRock, Scenery } from "./Scenery";
 import { tankSpecimens, type Specimen } from "../specimens";
 
 // ── Tuning ──────────────────────────────────────────────────────────
-const CRUISE_SPEED = 17; // px/s of ambling
-const FLEE_SPEED = 150; // px/s at full panic
-const FLEE_RADIUS = 115; // px: pointer closer than this and it bolts
-const FLEE_DECAY = 1.6; // panic shed per second once out of range
-const PAUSE_CHANCE = 0.22; // odds of stopping to think at each turn
-const PAUSE_MIN = 700;
-const PAUSE_MAX = 3200;
+// Body length in mm to drawn px, at scale 1 in a 1200px tank: 16 x sqrt(mm).
+// A straight line would make the stick insect fifty aphids long, which is
+// true and leaves the aphid as a dot.
+const PX_PER_SQRT_MM = 16;
+const MIN_PX = 30; // below this the linework stops reading as legs
+const FLEE_RADIUS = 130; // px: pointer closer than this and it bolts
+// Panic multiplies cruising speed by up to this. A slow walker is still
+// slow at three times its pace; startled insects sprint.
+const FLEE_BOOST = 8;
+const FLEE_DECAY = 1.1; // panic shed per second once out of range
+const TURN_RATE = 1.3; // how fast a heading eases towards its target, per s
 const WALL_PAD = 8;
 const SCATTER_MS = 1500; // how long a tap on the glass keeps everyone running
-const FLOOR_BAND = 0.34; // fraction of tank height the floor occupies
-// Two critters closer than this (as a fraction of their combined width) are
-// treated as bumping into each other. Without it they eventually converge on
-// the same patch of floor and sit on top of one another, which reads as a
-// rendering bug rather than as animals.
-const PERSONAL_SPACE = 0.55;
+// The dung beetle drops its ball and bolts when the pointer comes close. It
+// goes back once the pointer has kept away this long, or gives up being
+// scared after the longer wait and goes back anyway, braver for a while.
+const BEETLE_CALM_MS = 1200;
+const BEETLE_GIVE_UP_MS = 6000;
+const BEETLE_BRAVE_MS = 5000;
+const FLOOR_BAND = 0.3; // fraction of tank height the floor occupies
+// The front of the floor, as a share of its depth, is the dung beetle's
+// lane, the way the cave is its room. Everyone else walks behind it, or a
+// walker crossing the beetle's line slides over and under it and its ball
+// as their stacking order swaps, which reads as a tangle.
+const BEETLE_LANE = 0.3;
+const BACK_WALL = 0.95;
+// Two animals closer than this, as a fraction of their combined size, push
+// apart. These are unfilled line drawings, so one crossing another does not
+// read as "behind": it reads as one illegible tangle of strokes.
+const PERSONAL_SPACE = 0.6;
+
+// The beetle's half of the dung beetle drawing: the ball in the drawing
+// starts at 33% of its width, measured off the mask. The site draws its own
+// ball so that one can grow: every trip starts from a pellet and ends a
+// little over two beetle lengths across, which is what the real ones manage.
+const BEETLE_CUT = 0.33;
+const BOLL_START = 0.08; // diameter as a fraction of the drawing's height
+const BOLL_MAX = 0.8;
+// The drawing is a beetle doing a headstand against a big ball. With a
+// pellet, or nothing, it stands level on its feet; it climbs into the
+// headstand as the ball grows to reach its hind legs.
+const BEETLE_LEVEL_DEG = 40;
+const BOLL_HEADSTAND = 0.5; // ball size, as above, at which it is fully up
+// Where the hind legs meet the ball, as a share of the drawing's height up
+// from the floor. Measured off the mask: they touch it between 35% and 65%.
+const HIND_LEG_HEIGHT = 0.5;
+// How far into the cave, as a share of the cave's width, the beetle and its
+// ball go before they are lost in the dark. Both fade over that stretch.
+const CAVE_DEPTH = 0.3;
+const CAVE_W = 200; // px, matches the cave drawings' viewBox
+const CAVE_H = 130;
+
+type Mode = "walk" | "climb" | "fly" | "roll";
+
+type Habit = {
+	mode: Mode;
+	/** Body length in mm, or wingspan for the ones drawn wings out. */
+	mm: number;
+	/** Cruising pace in px/s at scale 1. */
+	pace: number;
+	/** Seconds of moving, then seconds of standing still. */
+	burst: [number, number];
+	rest: [number, number];
+	/** Moves like a caterpillar: bunch up, stretch out, and only gain
+	 *  ground on the stretch, instead of bouncing along on legs. */
+	inch?: boolean;
+};
+
+// Lengths are a typical adult of the animal the project is named after.
+const HABITS: Record<string, Habit> = {
+	"aphid-template": { mode: "walk", mm: 2.5, pace: 6, burst: [1, 3], rest: [2, 6] },
+	mycocepurus: { mode: "walk", mm: 2.5, pace: 22, burst: [0.6, 2], rest: [0.3, 1.2] },
+	cephalote: { mode: "walk", mm: 5, pace: 20, burst: [0.6, 2], rest: [0.4, 1.5] },
+	"leafcutter-ant": { mode: "walk", mm: 9, pace: 26, burst: [1, 3], rest: [0.3, 1] },
+	repletes: { mode: "walk", mm: 10, pace: 5, burst: [0.8, 2], rest: [3, 8] },
+	termite: { mode: "climb", mm: 6, pace: 12, burst: [1, 3], rest: [0.6, 2] },
+	"rove-beetle": { mode: "walk", mm: 14, pace: 34, burst: [0.5, 1.5], rest: [0.5, 2] },
+	lacewing: { mode: "walk", mm: 15, pace: 10, burst: [1, 2.5], rest: [1.5, 4] },
+	firefly: { mode: "fly", mm: 15, pace: 22, burst: [3, 7], rest: [0, 0] },
+	"dung-beetle-template": { mode: "roll", mm: 6, pace: 18, burst: [2, 5], rest: [0.5, 1.5] },
+	// The larva in its case, not the moth, and a small one: drawn on its spring
+	// the drawing is mostly coil, so it is sized down past its real length.
+	bagworm: { mode: "walk", mm: 7, pace: 4, burst: [1, 3], rest: [2, 5] },
+	// A cotton bollworm caterpillar grows to about 4cm, but drawn full grown
+	// it dwarfed the whole floor, so this one is a younger instar. The drawing
+	// is curled, so it inches rather than walks.
+	bollworm: { mode: "walk", mm: 18, pace: 5, burst: [3, 7], rest: [1, 3], inch: true },
+	argia: { mode: "walk", mm: 35, pace: 8, burst: [0.6, 1.5], rest: [3, 7] },
+	darter: { mode: "climb", mm: 55, pace: 14, burst: [0.6, 1.6], rest: [2, 6] },
+	antlion: { mode: "climb", mm: 70, pace: 8, burst: [0.8, 2], rest: [2, 6] },
+	phasmid: { mode: "walk", mm: 90, pace: 3, burst: [2, 5], rest: [3, 9] },
+};
+const DEFAULT_HABIT: Habit = { mode: "walk", mm: 10, pace: 10, burst: [1, 3], rest: [1, 3] };
 
 type Critter = {
 	key: string;
-	specimen: Specimen | null; // null = ambient background critter
+	specimen: Specimen;
 	art: ArtworkKey;
-	width: number; // rendered width in px
-	height: number; // rendered height in px, from the drawing's ratio
+	habit: Habit;
+	width: number; // px at scale 1
+	height: number;
 	flip: 1 | -1; // -1 for a drawing that has to be turned the right way up
-	depth: number; // 0 = at the glass, 1 = at the back wall
-	x: number; // px, centre
-	y: number; // px, feet
-	dir: 1 | -1;
-	pauseUntil: number;
+	depth: number; // 0 = at the glass, 1 = at the back wall; walkers move it
+	x: number; // px. Walkers: feet centre. Others: body centre.
+	y: number;
+	heading: number; // radians. Walkers: x against depth. Others: screen.
+	target: number;
+	dir: 1 | -1; // which way a side view is facing
+	moveUntil: number;
+	restUntil: number;
 	flee: number; // 0..1
 	gait: number; // radians, advances with distance walked
 	el: HTMLElement | null;
+};
+
+// The dung beetle's errand, as one small state machine.
+type Errand = {
+	/** Rolling a ball to the cave, inside it out of sight, or walking back
+	 *  out empty to fetch another. Or scared off its ball, and on the way
+	 *  back to it. */
+	phase: "rolling" | "inside" | "emerging" | "fleeing" | "returning";
+	boll: number; // diameter, px at scale 1
+	growth: number; // diameter gained per px rolled, set per trip
+	spin: number; // radians the ball has turned
+	tilt: number; // degrees the beetle has let itself down off its head
+	seen: number; // 0..1, how far out of the cave's dark the beetle is
+	ballSeen: number; // the same for its ball
+	parked: number;
+	/** Where the dropped ball lies while the beetle is away from it. */
+	ballAt: { x: number; y: number; d: number };
+	/** Where the beetle stood behind the ball, to pick it up again. */
+	resumeX: number;
+	runDir: 1 | -1;
+	scaredAt: number; // last time the pointer was close
+	fledAt: number;
+	braveUntil: number;
 };
 
 // The art is a fixed drawing, so the walk has to come from how the whole
@@ -66,10 +183,16 @@ type Critter = {
 // rather than by time. Tie a gait to the clock and a critter that has stopped
 // keeps jogging on the spot.
 const GAIT_PER_PX = 0.42; // radians of cycle per pixel travelled
-const BOUNCE_PX = 1.6;
-const ROCK_DEG = 2.4;
+const BOUNCE_PX = 1.2;
+const ROCK_DEG = 2.2;
+const BANK_DEG = 14; // the firefly's tilt into a climb or a dive
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
+const clamp = (v: number, lo: number, hi: number) =>
+	Math.min(Math.max(v, lo), hi);
+/** Shortest signed turn from a to b. */
+const turn = (a: number, b: number) =>
+	Math.atan2(Math.sin(b - a), Math.cos(b - a));
 
 function usePrefersReducedMotion(): boolean {
 	const [reduced, setReduced] = useState(
@@ -86,99 +209,144 @@ function usePrefersReducedMotion(): boolean {
 	return reduced;
 }
 
-// One depth per flagship, so no two share a floor line.
-//
-// Keyed by id rather than indexed by position: a positional list has to be
-// kept the same length as the tank, and when it falls behind it wraps and
-// quietly stands two animals on the same line. Front of the case is for the
-// drawings that survive being shrunk least — Aphid is the thinnest linework
-// in the collection and disappears at the back wall — and the sturdy filled
-// ones take the distance.
+// Where each animal starts across the floor's depth, and how far back the
+// climbers and the flyer are drawn. Keyed by id rather than indexed, so a
+// new specimen cannot silently take somebody else's line.
 const TANK_DEPTH: Record<string, number> = {
-	// Fine pencil like the leafcutter, so it takes the glass.
-	argia: 0.0675,
-	lacewing: 0.12,
-	// Right behind the lacewing it gets mistaken for.
-	antlion: 0.1725,
-	// Fine pencil, and small: it gets lost any further back.
-	"leafcutter-ant": 0.225,
-	darter: 0.2775,
-	// Segmented and medium weight: between the fine pencil at the front and
-	// the solid beetle behind it.
-	bollworm: 0.3038,
-	"dung-beetle-template": 0.33,
-	"aphid-template": 0.3825,
-	mycocepurus: 0.435,
-	bagworm: 0.4875,
-	firefly: 0.54,
-	repletes: 0.5925,
-	cephalote: 0.645,
-	// Thick enough to read from anywhere, so it takes the second-to-last line.
-	phasmid: 0.6975,
-	// Furthest back on purpose: the tallest drawing in the case, and the
-	// distance takes the edge off it.
-	termite: 0.75,
+	// The dung beetle has the front lane to itself; walkers are spread over
+	// the floor behind it, one line each.
+	"dung-beetle-template": 0.06,
+	argia: 0.34,
+	"leafcutter-ant": 0.4,
+	lacewing: 0.46,
+	"aphid-template": 0.52,
+	bagworm: 0.58,
+	bollworm: 0.64,
+	cephalote: 0.7,
+	mycocepurus: 0.76,
+	"rove-beetle": 0.82,
+	repletes: 0.88,
+	phasmid: 0.93,
+	// Climbers and the flyer: how far back they are drawn, nothing more.
+	antlion: 0.5,
+	darter: 0.45,
+	firefly: 0.3,
+	termite: 0.4,
 };
 
-/** Extras that fill the tank out. Too small to click, and unlabelled. They
- *  sit behind every flagship, which is the only place left for them now the
- *  collection fills the front of the case on its own. */
-const AMBIENT: { art: ArtworkKey; depth: number }[] = [
-	{ art: "grub", depth: 0.83 },
-	{ art: "cocoon", depth: 0.9 },
-	{ art: "grub", depth: 0.97 },
-];
+/** A new heading for the next burst. Walkers keep mostly to crossing the
+ *  tank and drift a little in depth; climbers go up or down the glass. */
+function pickHeading(c: Critter): number {
+	if (c.habit.mode === "climb") {
+		return (Math.random() < 0.5 ? -Math.PI / 2 : Math.PI / 2) + rand(-0.4, 0.4);
+	}
+	if (c.habit.mode === "roll") return c.heading;
+	// Walkers usually carry on the way they face, and turn back now and then.
+	const ahead = c.dir === 1 ? 0 : Math.PI;
+	const base = Math.random() < 0.7 ? ahead : ahead + Math.PI;
+	return base + rand(-0.35, 0.35);
+}
 
-export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
+export function Vivarium({
+	onOpen,
+	spotlight,
+}: {
+	onOpen: (s: Specimen) => void;
+	/** An animal being looked at on the page: it stops and lights up. */
+	spotlight: string | null;
+}) {
 	const reduced = usePrefersReducedMotion();
 	const tankRef = useRef<HTMLDivElement>(null);
 	const crittersRef = useRef<Critter[]>([]);
-	const boundsRef = useRef({ w: 0, h: 0 });
-	const pointerRef = useRef<number | null>(null); // tank-local x only
+	const boundsRef = useRef({ w: 0, h: 0, size: 1 });
+	const pointerRef = useRef<{ x: number; y: number } | null>(null);
 	const scatterUntilRef = useRef(0);
+	const errandRef = useRef<Errand>({
+		phase: "rolling",
+		boll: 0,
+		growth: 0,
+		spin: 0,
+		tilt: BEETLE_LEVEL_DEG,
+		seen: 1,
+		ballSeen: 1,
+		parked: 0,
+		ballAt: { x: 0, y: 0, d: 0 },
+		resumeX: 0,
+		runDir: -1,
+		scaredAt: 0,
+		fledAt: 0,
+		braveUntil: 0,
+	});
+	const bollRef = useRef<HTMLDivElement>(null);
+	const caveInsideRef = useRef<HTMLDivElement>(null);
+	const caveRockRef = useRef<HTMLDivElement>(null);
 
 	const [hovered, setHovered] = useState<string | null>(null);
+	const [notes, setNotes] = useState<"on" | "fading" | "off">(() =>
+		notesSeen() ? "off" : "on",
+	);
+	// The notes on the glass are for a first look. The first time anyone
+	// does anything with the tank they fade, and that browser never sees
+	// them again.
+	const notesRef = useRef(notes);
+	const dismissNotes = useCallback(() => {
+		if (notesRef.current !== "on") return;
+		notesRef.current = "fading";
+		markNotesSeen();
+		setNotes("fading");
+		window.setTimeout(() => setNotes("off"), 700);
+	}, []);
+	// The loop reads the spotlight every frame, so it lives in a ref rather
+	// than restarting the loop each time the pointer moves between photos.
+	const spotlightRef = useRef(spotlight);
+	useEffect(() => {
+		spotlightRef.current = spotlight;
+	}, [spotlight]);
 	const [shaking, setShaking] = useState(false);
+	const [parked, setParked] = useState(0);
 
 	if (crittersRef.current.length === 0) {
-		const flagships = tankSpecimens();
-		crittersRef.current = [
-			...flagships.map<Critter>((s, i) => ({
+		crittersRef.current = tankSpecimens().map<Critter>((s, i) => {
+			const habit = HABITS[s.id] ?? DEFAULT_HABIT;
+			const ratio = artworkRatio(s.art);
+			const long = Math.max(MIN_PX, PX_PER_SQRT_MM * Math.sqrt(habit.mm));
+			// The long axis gets the body length: the width for everything
+			// drawn side-on or wings out, the height for the termite, which
+			// is drawn standing up.
+			let width = ratio >= 1 ? long : long * ratio;
+			let height = width / ratio;
+			if (habit.mode === "roll") {
+				// The length is the beetle's, which is only its part of the
+				// drawing.
+				height = long / BEETLE_CUT / ratio;
+				width = long;
+			}
+			const heading = habit.mode === "roll" ? 0 : i % 2 === 0 ? 0 : Math.PI;
+			return {
 				key: s.id,
 				specimen: s,
 				art: s.art,
-				// Insect-sized against the case rather than poster-sized: a
-				// lacewing you could hold in your hand, not one filling a
-				// vivarium.
-				width: Math.round(58 * artworkScale(s.art)),
-				height: Math.round(58 * artworkScale(s.art)) / artworkRatio(s.art),
+				habit,
+				width,
+				height,
 				flip: artworkHangs(s.art) ? -1 : 1,
-				depth: TANK_DEPTH[s.id] ?? 0.5,
+				// Walkers start behind the beetle's lane, wherever their line is.
+				depth:
+					habit.mode === "walk"
+						? clamp(TANK_DEPTH[s.id] ?? 0.5, BEETLE_LANE, BACK_WALL)
+						: (TANK_DEPTH[s.id] ?? 0.5),
 				x: 0,
 				y: 0,
-				dir: i % 2 === 0 ? 1 : -1,
-				pauseUntil: 0,
+				heading,
+				target: heading,
+				dir: Math.cos(heading) >= 0 ? 1 : -1,
+				moveUntil: 0,
+				restUntil: 0,
 				flee: 0,
 				gait: Math.random() * Math.PI * 2,
 				el: null,
-			})),
-			...AMBIENT.map<Critter>((a, i) => ({
-				key: `ambient-${i}`,
-				specimen: null,
-				art: a.art,
-				width: Math.round(58 * artworkScale(a.art)),
-				height: Math.round(58 * artworkScale(a.art)) / artworkRatio(a.art),
-				flip: artworkHangs(a.art) ? -1 : 1,
-				depth: a.depth,
-				x: 0,
-				y: 0,
-				dir: i % 2 === 0 ? -1 : 1,
-				pauseUntil: 0,
-				flee: 0,
-				gait: Math.random() * Math.PI * 2,
-				el: null,
-			})),
-		];
+			};
+		});
 	}
 
 	/** Feet line for a given depth: further back sits higher up the glass. */
@@ -187,13 +355,110 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 		return h - WALL_PAD - depth * (h * FLOOR_BAND);
 	}, []);
 
+	const beetle = () =>
+		crittersRef.current.find((c) => c.habit.mode === "roll") ?? null;
+
+	/** The left edge of the cave mouth's floor, in tank px. */
+	const caveMouthX = useCallback(() => {
+		const { w, size } = boundsRef.current;
+		return w - CAVE_W * size * 0.78;
+	}, []);
+
+	const drawBoll = useCallback(() => {
+		const b = beetle();
+		const el = bollRef.current;
+		if (!b || !el) return;
+		const e = errandRef.current;
+		const { size } = boundsRef.current;
+		const scale = (1 - b.depth * 0.32) * size;
+		// Dropped: it lies where it was left until the beetle is back.
+		if (e.phase === "fleeing" || e.phase === "returning") {
+			const { x, y, d } = e.ballAt;
+			el.style.transform = `translate3d(${x - d / 2}px, ${y - d}px, 0) rotate(${e.spin}rad)`;
+			return;
+		}
+		if (e.phase !== "rolling") {
+			el.style.opacity = "0";
+			return;
+		}
+		el.style.opacity = String(e.ballSeen);
+		const d = e.boll * scale;
+		// The ball sits against the beetle's hind legs. In the drawing they
+		// are at the box's right edge, halfway up, but the beetle tilts about
+		// its head (the box's bottom-left corner), and level it swings its back
+		// end well past that edge. So the legs are found by turning that point
+		// through the same tilt. The legs reach a little way round the ball,
+		// so the two overlap slightly.
+		const t = (e.tilt * Math.PI) / 180;
+		const bw = b.width * scale;
+		const legUp = b.height * scale * HIND_LEG_HEIGHT;
+		const back = b.x - bw / 2 + bw * Math.cos(t) + legUp * Math.sin(t);
+		const cx = back + d / 2 - d * 0.06;
+		el.style.width = `${d}px`;
+		el.style.height = `${d}px`;
+		el.style.transform = `translate3d(${cx - d / 2}px, ${b.y - d}px, 0) rotate(${e.spin}rad)`;
+		e.ballAt = { x: cx, y: b.y, d };
+	}, []);
+
 	const draw = useCallback((c: Critter) => {
 		if (!c.el) return;
-		// Things further away are drawn smaller. Scale, flip, bounce and rock
-		// all ride on the one transform so the browser composites once.
-		const scale = 1 - c.depth * 0.32;
+		const { size } = boundsRef.current;
+		// Further away is drawn smaller. Scale, flip, bounce and tilt all
+		// ride on the one transform so the browser composites once.
+		const scale = (1 - c.depth * 0.32) * size;
 		const bounce = Math.abs(Math.sin(c.gait)) * BOUNCE_PX;
 		const rock = Math.sin(c.gait * 0.5) * ROCK_DEG;
+
+		if (c.habit.mode === "climb") {
+			// Drawn head-up, so a heading of straight up is no rotation.
+			const deg = (c.heading * 180) / Math.PI + 90 + rock;
+			c.el.style.transform =
+				`translate3d(${c.x - c.width / 2}px, ${c.y - c.height / 2}px, 0) ` +
+				`rotate(${deg}deg) scale(${scale})`;
+			c.el.style.zIndex = "1";
+			return;
+		}
+
+		if (c.habit.mode === "fly") {
+			const bank = Math.sin(c.heading) * BANK_DEG * c.dir;
+			c.el.style.transform =
+				`translate3d(${c.x - c.width / 2}px, ${c.y - c.height / 2 - bounce}px, 0) ` +
+				`rotate(${bank}deg) scale(${scale * c.dir}, ${scale})`;
+			c.el.style.zIndex = "500";
+			return;
+		}
+
+		if (c.habit.inch) {
+			// Bunched up and stretched out in turn, along the floor, with the
+			// back end staying put: origin at the tail.
+			const pull = Math.sin(c.gait);
+			c.el.style.transformOrigin = c.dir === 1 ? "left bottom" : "right bottom";
+			c.el.style.transform =
+				`translate3d(${c.x - c.width / 2}px, ${c.y - c.height}px, 0) ` +
+				`scale(${scale * c.dir * (1 + pull * 0.07)}, ${scale * (1 - pull * 0.05)})`;
+			c.el.style.zIndex = String(10 + Math.round(c.y));
+			return;
+		}
+
+		if (c.habit.mode === "roll") {
+			// Always the drawing's own way round: it backs the ball to the
+			// right and walks home head first to the left. The tilt pivots on
+			// its head, at the box's bottom-left corner.
+			const { tilt, seen } = errandRef.current;
+			c.el.style.opacity = String(seen);
+			// Lost in the dark is not clickable either.
+			c.el.style.visibility = seen > 0 ? "visible" : "hidden";
+			c.el.style.transformOrigin = "left bottom";
+			// Tipping about its head swings the back legs down through the
+			// floor, so it is lifted by about as much as they drop.
+			const lift = c.width * scale * Math.sin((tilt * Math.PI) / 180) * 0.4;
+			c.el.style.transform =
+				`translate3d(${c.x - c.width / 2}px, ${c.y - c.height - bounce - lift}px, 0) ` +
+				`rotate(${tilt + rock}deg) scale(${scale})`;
+			c.el.style.zIndex = String(10 + Math.round(c.y));
+			return;
+		}
+
 		// A drawing of a hanging animal is mirrored vertically to stand it up.
 		// The transform origin is the bottom edge, so a bare negative y-scale
 		// would reflect the whole box straight down through the floor. Moving
@@ -204,33 +469,72 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 		// insect on its back.
 		const stand = c.flip === -1 ? ` translateY(${c.height}px)` : "";
 		c.el.style.transform =
-			`translate3d(${c.x - c.width / 2}px, ${c.y - bounce}px, 0) ` +
-			`rotate(${rock * c.dir * c.flip}deg) ` +
+			`translate3d(${c.x - c.width / 2}px, ${c.y - c.height - bounce}px, 0) ` +
+			`rotate(${rock * c.flip * c.dir}deg) ` +
 			`scale(${scale * c.dir}, ${scale * c.flip})` +
 			stand;
+		// Nearer the glass is drawn over further back.
+		c.el.style.zIndex = String(10 + Math.round(c.y));
 	}, []);
+
+	/** Start a trip to the cave from a pellet, sized to finish growing as it
+	 *  arrives, however far away the beetle happens to be. */
+	const startTrip = useCallback(
+		(b: Critter) => {
+			const e = errandRef.current;
+			e.phase = "rolling";
+			e.boll = b.height * BOLL_START;
+			e.tilt = BEETLE_LEVEL_DEG;
+			e.seen = 1;
+			e.ballSeen = 1;
+			const trip = Math.max(80, caveMouthX() - b.x);
+			e.growth = (b.height * (BOLL_MAX - BOLL_START)) / trip;
+			b.heading = b.target = 0;
+			b.dir = 1;
+		},
+		[caveMouthX],
+	);
 
 	const layout = useCallback(
 		(reseed: boolean) => {
 			const el = tankRef.current;
 			if (!el) return;
 			const r = el.getBoundingClientRect();
-			boundsRef.current = { w: r.width, h: r.height };
+			// A phone-width tank gets smaller animals rather than a pile of them.
+			const size = clamp(r.width / 1200, 0.5, 1.4);
+			boundsRef.current = { w: r.width, h: r.height, size };
 			const list = crittersRef.current;
+			const air = r.height * (1 - FLOOR_BAND);
 			list.forEach((c, i) => {
-				const pad = WALL_PAD + c.width / 2;
-				const span = Math.max(0, r.width - pad * 2);
+				const pad = WALL_PAD + (c.width * size) / 2;
 				if (reseed) {
 					// Spaced across the width so nobody spawns on top of anyone.
-					c.x = pad + ((i + 0.5) / list.length) * span;
-				} else {
-					c.x = Math.min(Math.max(c.x, pad), pad + span);
+					c.x = pad + ((i + 0.5) / list.length) * Math.max(0, r.width - pad * 2);
+					if (c.habit.mode === "climb") c.y = rand(r.height * 0.15, r.height * 0.6);
+					if (c.habit.mode === "fly") c.y = air * 0.35;
 				}
-				c.y = floorY(c.depth);
-				draw(c);
+				c.x = clamp(c.x, pad, r.width - pad);
+				if (c.habit.mode === "walk" || c.habit.mode === "roll") c.y = floorY(c.depth);
+				else c.y = clamp(c.y, pad, r.height - pad);
 			});
+
+			// The cave stands on the dung beetle's floor line at the right wall.
+			const b = beetle();
+			const caveTop = (b ? b.y : r.height - WALL_PAD) - CAVE_H * size;
+			for (const node of [caveInsideRef.current, caveRockRef.current]) {
+				if (!node) continue;
+				node.style.width = `${CAVE_W * size}px`;
+				node.style.height = `${CAVE_H * size}px`;
+				node.style.transform = `translate3d(${r.width - CAVE_W * size}px, ${caveTop}px, 0)`;
+			}
+			if (b && reseed) {
+				b.x = Math.min(b.x, caveMouthX() * 0.4);
+				startTrip(b);
+			}
+			list.forEach(draw);
+			drawBoll();
 		},
-		[draw, floorY],
+		[draw, drawBoll, floorY, caveMouthX, startTrip],
 	);
 
 	useLayoutEffect(() => {
@@ -251,101 +555,288 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 		const step = (now: number) => {
 			const dt = Math.min((now - last) / 1000, 0.05); // cap after a tab switch
 			last = now;
-			const { w } = boundsRef.current;
+			const { w, h, size } = boundsRef.current;
+			const band = h * FLOOR_BAND;
 			const scattering = now < scatterUntilRef.current;
-			const pointerX = pointerRef.current;
+			const pointer = pointerRef.current;
+			const list = crittersRef.current;
+			const mouth = caveMouthX();
 
-			for (const c of crittersRef.current) {
-				const pad = WALL_PAD + c.width / 2;
+			for (const c of list) {
+				const { mode } = c.habit;
+				const scale = (1 - c.depth * 0.32) * size;
+				const padX = WALL_PAD + (c.width * scale) / 2;
+				const padY = WALL_PAD + (c.height * scale) / 2;
 
-				if (scattering) {
-					c.flee = 1;
-					c.pauseUntil = 0;
-				} else {
-					if (pointerX !== null) {
-						const d = Math.abs(pointerX - c.x);
+				if (mode !== "roll") {
+					if (scattering) {
+						c.flee = 1;
+					} else if (pointer) {
+						// Where the body is on screen, for the pointer test.
+						const bodyY = mode === "walk" ? c.y - (c.height * scale) / 2 : c.y;
+						const dx = c.x - pointer.x;
+						const dy = bodyY - pointer.y;
+						const d = Math.hypot(dx, dy);
 						if (d < FLEE_RADIUS) {
 							c.flee = Math.max(c.flee, 1 - d / FLEE_RADIUS);
-							c.pauseUntil = 0;
-							// Run the other way, unless that means running into
-							// the glass. Cornered, it squeezes past instead.
-							const away: 1 | -1 = pointerX > c.x ? -1 : 1;
-							if (away === 1 ? c.x < w - pad : c.x > pad) c.dir = away;
+							// Straight away from the pointer. On the floor, "up the
+							// screen" is "further back", so the same angle works.
+							c.target = mode === "walk" ? Math.atan2(-dy, dx) : Math.atan2(dy, dx);
 						}
 					}
-					c.flee = Math.max(0, c.flee - FLEE_DECAY * dt);
+					if (!scattering) c.flee = Math.max(0, c.flee - FLEE_DECAY * dt);
+				} else {
+					// The dung beetle only scares while it is out in the open
+					// with a ball to lose, or on its way back to one.
+					const e = errandRef.current;
+					const exposed =
+						e.phase === "rolling" || e.phase === "fleeing" || e.phase === "returning";
+					let near = scattering;
+					let from = c.x + 1;
+					if (!near && pointer && exposed && now >= e.braveUntil) {
+						const bodyY = c.y - (c.height * scale) / 2;
+						near = Math.hypot(c.x - pointer.x, bodyY - pointer.y) < FLEE_RADIUS;
+						from = pointer.x;
+					}
+					if (near && exposed) {
+						c.flee = 1;
+						e.scaredAt = now;
+						if (e.phase !== "fleeing") {
+							if (e.phase === "rolling") e.resumeX = c.x;
+							e.phase = "fleeing";
+							e.fledAt = now;
+							e.tilt = BEETLE_LEVEL_DEG;
+						}
+						e.runDir = c.x < from ? -1 : 1;
+					} else {
+						// Still a little jumpy on the way back: it hurries to
+						// the ball rather than stopping for a rest on the way.
+						const floor = e.phase === "returning" ? 0.3 : 0;
+						c.flee = Math.max(floor, c.flee - FLEE_DECAY * dt);
+					}
 				}
 
-				if (now < c.pauseUntil) {
+				// Being looked at on the page: hold still and calm down, so it
+				// can be found.
+				if (c.key === spotlightRef.current) {
+					c.flee = 0;
+					c.restUntil = Math.max(c.restUntil, now + 250);
+				}
+
+				// Bursts: move for a while, stand still for a while. A scare
+				// cuts any rest short.
+				const scared = c.flee > 0.05;
+				if (!scared && now >= c.moveUntil && now >= c.restUntil) {
+					c.restUntil = now + rand(...c.habit.rest) * 1000;
+					c.moveUntil = c.restUntil + rand(...c.habit.burst) * 1000;
+					c.target = pickHeading(c);
+				}
+				const resting = !scared && now < c.restUntil;
+
+				// Heading eases round, at rest too, so an animal turns on the
+				// spot before setting off rather than snapping about.
+				c.heading +=
+					turn(c.heading, c.target) * Math.min(1, TURN_RATE * dt * (1 + c.flee * 3));
+				const vx = Math.cos(c.heading);
+				const vy = Math.sin(c.heading);
+				// A side view only turns round once it is clearly heading the
+				// other way, or it flickers while walking straight back.
+				if (mode !== "climb" && mode !== "roll" && Math.abs(vx) > 0.3) {
+					c.dir = vx > 0 ? 1 : -1;
+				}
+
+				if (resting) {
 					draw(c);
 					continue;
 				}
 
-				const speed = CRUISE_SPEED + (FLEE_SPEED - CRUISE_SPEED) * c.flee;
-				const travelled = speed * dt;
-				c.x += c.dir * travelled;
-				// Smaller animals take quicker steps, so the cycle scales with
-				// how big the drawing is rather than being the same for all.
-				c.gait += (travelled * GAIT_PER_PX * 40) / c.width;
-
-				// Turn at the glass, and sometimes have a think about it first.
-				if (c.x <= pad || c.x >= w - pad) {
-					c.x = Math.min(Math.max(c.x, pad), w - pad);
-					c.dir = c.dir === 1 ? -1 : 1;
-					if (c.flee < 0.05 && Math.random() < PAUSE_CHANCE) {
-						c.pauseUntil = now + rand(PAUSE_MIN, PAUSE_MAX);
-					}
+				const speed = c.habit.pace * size * (1 + (FLEE_BOOST - 1) * c.flee);
+				let travelled = speed * dt;
+				if (c.habit.inch) {
+					// One bunch-and-stretch a second or so, faster when scared,
+					// and ground is only gained while stretching out.
+					c.gait += dt * 5 * (1 + c.flee * 2);
+					travelled *= Math.max(0, Math.cos(c.gait)) * 2.6;
+				} else {
+					// Smaller animals take quicker steps, so the cycle scales
+					// with how big the drawing is rather than being the same.
+					c.gait += (travelled * GAIT_PER_PX * 40) / c.width;
 				}
 
+				if (mode === "walk") {
+					c.x += vx * travelled;
+					c.depth += (vy * travelled * 0.5) / band;
+					// The glass, and the cave mouth, which is the dung beetle's,
+					// so it is the right-hand wall for everyone else.
+					const right = mouth - padX;
+					if (c.x <= padX || c.x >= right) {
+						c.x = clamp(c.x, padX, right);
+						c.target = c.x <= padX ? rand(-0.3, 0.3) : Math.PI + rand(-0.3, 0.3);
+					}
+					if (c.depth <= BEETLE_LANE || c.depth >= BACK_WALL) {
+						c.depth = clamp(c.depth, BEETLE_LANE, BACK_WALL);
+						c.target = -c.target;
+					}
+					c.y = floorY(c.depth);
+				} else if (mode === "climb" || mode === "fly") {
+					c.x += vx * travelled;
+					c.y += vy * travelled;
+					// The firefly keeps to the air; climbers use the whole glass.
+					const top = mode === "fly" ? padY + h * 0.05 : padY;
+					const bottom = mode === "fly" ? h - band - padY : h - padY;
+					if (c.x <= padX || c.x >= w - padX) {
+						c.x = clamp(c.x, padX, w - padX);
+						c.target = Math.PI - c.heading;
+					}
+					if (c.y <= top || c.y >= bottom) {
+						c.y = clamp(c.y, top, bottom);
+						c.target = -c.heading;
+					}
+					// The firefly wanders by small changes of course, not by
+					// picking a new direction out of nowhere.
+					if (mode === "fly" && Math.random() < dt * 0.8) {
+						c.target = c.heading + rand(-0.9, 0.9);
+					}
+				} else {
+					roll(c, travelled, now);
+				}
 				draw(c);
 			}
 
-			// Second pass: anyone who has walked into someone turns round. Done
-			// after everything has moved so the pair see the same gap and both
-			// react to it.
-			//
-			// This ignores depth on purpose. Depth-aware overlap would be right
-			// for solid animals, but these are unfilled line drawings: one
-			// crossing another does not read as "behind", it reads as a single
-			// illegible tangle of strokes. Keeping everyone in their own column
-			// costs nothing and the tank is never ambiguous.
-			for (let i = 0; i < crittersRef.current.length; i++) {
-				const a = crittersRef.current[i];
-				for (let j = i + 1; j < crittersRef.current.length; j++) {
-					const b = crittersRef.current[j];
-					const gap = Math.abs(a.x - b.x);
-					const min = (a.width + b.width) / 2 * PERSONAL_SPACE;
-					if (gap >= min) continue;
-					// Back off along the axis that separates them.
-					const push: 1 | -1 = a.x < b.x ? -1 : 1;
-					a.dir = push;
-					b.dir = push === 1 ? -1 : 1;
-					const shove = (min - gap) / 2;
-					a.x += push * shove;
-					b.x -= push * shove;
-					a.pauseUntil = 0;
-					b.pauseUntil = 0;
-					draw(a);
-					draw(b);
+			// Anyone who has walked into someone steps aside. Done after
+			// everything has moved, so each pair sees the same gap.
+			for (let i = 0; i < list.length; i++) {
+				const a = list[i];
+				for (let j = i + 1; j < list.length; j++) {
+					const b = list[j];
+					// Floor and air do not meet.
+					if ((a.habit.mode === "fly") !== (b.habit.mode === "fly")) continue;
+					const dx = b.x - a.x;
+					const dy = b.y - a.y;
+					const gap = Math.hypot(dx, dy);
+					const min =
+						((Math.max(a.width, a.height) + Math.max(b.width, b.height)) / 2) *
+						size *
+						PERSONAL_SPACE;
+					if (gap >= min || gap === 0) continue;
+					const away = Math.atan2(dy, dx);
+					for (const [c, sign] of [
+						[a, -1],
+						[b, 1],
+					] as const) {
+						if (c.habit.mode === "roll") continue;
+						const shove = ((min - gap) / 2) * sign;
+						c.x += Math.cos(away) * shove;
+						if (c.habit.mode === "walk") {
+							c.depth = clamp(
+								c.depth - (Math.sin(away) * shove) / band,
+								BEETLE_LANE,
+								BACK_WALL,
+							);
+							c.y = floorY(c.depth);
+						} else {
+							c.y += Math.sin(away) * shove;
+						}
+						draw(c);
+					}
 				}
 			}
+			drawBoll();
 			raf = requestAnimationFrame(step);
+		};
+
+		// The dung beetle's day: pick up a pellet, back it towards the cave
+		// while it grows, take it inside and out of sight, wait, then walk
+		// back out empty-handed for the next.
+		const roll = (c: Critter, travelled: number, now: number) => {
+			const e = errandRef.current;
+			const { w, size } = boundsRef.current;
+			const scale = (1 - c.depth * 0.32) * size;
+			const half = (c.width * scale) / 2;
+			const mouth = caveMouthX();
+			const dark = CAVE_W * size * CAVE_DEPTH;
+			/** 1 outside the cave, falling to 0 at CAVE_DEPTH inside it. */
+			const outside = (x: number) => clamp(1 - (x - mouth) / dark, 0, 1);
+
+			if (e.phase === "rolling") {
+				// Heavier going as the ball grows, which is the whole joke.
+				const effort = 1 - (e.boll / c.height - BOLL_START) * 0.8;
+				const step = travelled * effort;
+				c.heading = c.target = 0;
+				c.x += step;
+				e.boll = Math.min(c.height * BOLL_MAX, e.boll + step * e.growth);
+				// Rolling without slipping: the ball turns by distance over radius.
+				e.spin += step / Math.max(1, (e.boll * scale) / 2);
+				const up = clamp(
+					(e.boll / c.height - BOLL_START) / (BOLL_HEADSTAND - BOLL_START),
+					0,
+					1,
+				);
+				e.tilt = BEETLE_LEVEL_DEG * (1 - up);
+				const ballX = c.x + half + (e.boll * scale) / 2;
+				e.ballSeen = outside(ballX);
+				e.seen = outside(c.x);
+				if (e.seen === 0) {
+					e.phase = "inside";
+					e.parked += 1;
+					setParked(e.parked);
+					// A while in the dark, putting it away.
+					c.restUntil = now + rand(2.5, 5) * 1000;
+					c.moveUntil = c.restUntil + 60_000;
+				}
+			} else if (e.phase === "fleeing") {
+				c.x = clamp(c.x + e.runDir * travelled, WALL_PAD + half, mouth - half);
+				const calm = now - e.scaredAt > BEETLE_CALM_MS;
+				const bored = now - e.fledAt > BEETLE_GIVE_UP_MS;
+				if (calm || bored) {
+					e.phase = "returning";
+					if (bored) e.braveUntil = now + BEETLE_BRAVE_MS;
+				}
+			} else if (e.phase === "returning") {
+				// Back to the ball, then on with the job exactly where it
+				// was left: same ball, same size, same tilt.
+				const gap = e.resumeX - c.x;
+				if (Math.abs(gap) <= travelled) {
+					c.x = e.resumeX;
+					e.phase = "rolling";
+				} else {
+					c.x += Math.sign(gap) * travelled;
+				}
+			} else if (e.phase === "inside") {
+				// The rest is over: out it comes, head first, nothing to push.
+				e.phase = "emerging";
+				e.tilt = BEETLE_LEVEL_DEG;
+				c.heading = c.target = Math.PI;
+			} else {
+				c.x -= travelled * 1.6;
+				e.seen = outside(c.x);
+				const home = Math.max(WALL_PAD + half, mouth - w * 0.5);
+				if (c.x <= home) {
+					startTrip(c);
+					// A moment to get the pellet together before setting off.
+					c.restUntil = now + rand(1, 2) * 1000;
+					c.moveUntil = c.restUntil + 60_000;
+				}
+			}
+			c.y = floorY(c.depth);
 		};
 
 		raf = requestAnimationFrame(step);
 		return () => cancelAnimationFrame(raf);
-	}, [reduced, draw]);
+	}, [reduced, draw, drawBoll, floorY, caveMouthX, startTrip]);
 
 	const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
 		if (e.pointerType === "touch") return; // a finger is a tap, not a hover
+		dismissNotes();
 		const r = e.currentTarget.getBoundingClientRect();
-		pointerRef.current = e.clientX - r.left;
+		pointerRef.current = { x: e.clientX - r.left, y: e.clientY - r.top };
 	};
 	const onPointerLeave = () => {
 		pointerRef.current = null;
 	};
 
 	const tapTheGlass = () => {
+		dismissNotes();
 		scatterUntilRef.current = performance.now() + SCATTER_MS;
 		pointerRef.current = null;
 		if (reduced) return;
@@ -362,146 +853,183 @@ export function Vivarium({ onOpen }: { onOpen: (s: Specimen) => void }) {
 				ref={tankRef}
 				onPointerMove={onPointerMove}
 				onPointerLeave={onPointerLeave}
-				data-note="the drawings are the projects' own logos, lifted straight out of their repos."
+				onPointerDown={dismissNotes}
+				data-note="the drawings are the projects' own logos, lifted straight out of their repos. the plants are stand-ins."
 				className={
-					// A shallow vitrine rather than a deep tank. Once the animals
-					// are drawn at the size animals actually are, a tall tank is
-					// mostly empty glass.
-					"vivarium-glass relative h-[10rem] w-full overflow-hidden rounded-lg border-2 border-theme-border bg-theme-panel/40 sm:h-[12rem] " +
+					// isolate: the animals restack by z-index every frame, and
+					// without a stacking context of its own those numbers would
+					// outrank the greeting, the card and anything else fixed
+					// over the page.
+					"vivarium-glass isolate relative h-[min(clamp(22rem,44vw,40rem),62vh)] w-full overflow-hidden border-y border-theme-border bg-theme-panel/40 " +
 					(shaking ? "vivarium-shake" : "")
 				}
 			>
-				<Substrate />
+				<Scenery />
 
-				{crittersRef.current.map((c) =>
-					c.specimen ? (
-						<button
-							key={c.key}
-							ref={(el) => {
-								c.el = el;
-							}}
-							type="button"
-							onClick={() => onOpen(c.specimen!)}
-							onMouseEnter={() => setHovered(c.key)}
-							onMouseLeave={() =>
-								setHovered((h) => (h === c.key ? null : h))
-							}
-							onFocus={() => setHovered(c.key)}
-							onBlur={() => setHovered((h) => (h === c.key ? null : h))}
-							style={{
-								width: c.width,
-								height: c.height,
-								// Feet on the floor line, so `y` means the same
-								// thing for a long lacewing and a tall bagworm.
-								transformOrigin: "center bottom",
-								marginTop: -c.height,
-							}}
-							aria-label={`${c.specimen.name}: ${c.specimen.tagline}`}
-							className="vivarium-critter absolute left-0 top-0 cursor-pointer text-theme-text-secondary transition-colors hover:text-theme-accent focus:outline-none focus-visible:text-theme-accent"
-						>
-							{/* At this scale the drawing itself is a smaller
-							    target than a fingertip, so the hit area is
-							    grown past it without changing the layout. */}
-							<span aria-hidden="true" className="absolute -inset-3" />
+				<div
+					ref={caveInsideRef}
+					className="pointer-events-none absolute left-0 top-0 z-[5]"
+				>
+					<CaveInside parked={parked} />
+				</div>
+				<div
+					ref={bollRef}
+					aria-hidden="true"
+					className="pointer-events-none absolute left-0 top-0 text-theme-text-secondary"
+					style={{ zIndex: 9999, opacity: 0 }}
+				>
+					<Boll />
+				</div>
+				<div
+					ref={caveRockRef}
+					className="pointer-events-none absolute left-0 top-0 text-theme-border"
+					style={{ zIndex: 10000 }}
+				>
+					<CaveRock />
+				</div>
+
+				{crittersRef.current.map((c) => (
+					<button
+						key={c.key}
+						ref={(el) => {
+							c.el = el;
+						}}
+						type="button"
+						onClick={() => onOpen(c.specimen)}
+						onMouseEnter={() => setHovered(c.key)}
+						onMouseLeave={() => setHovered((h) => (h === c.key ? null : h))}
+						onFocus={() => setHovered(c.key)}
+						onBlur={() => setHovered((h) => (h === c.key ? null : h))}
+						style={{
+							width: c.width,
+							height: c.height,
+							transformOrigin:
+								c.habit.mode === "walk" || c.habit.mode === "roll"
+									? "center bottom"
+									: "center center",
+						}}
+						aria-label={`${c.specimen.name}: ${c.specimen.tagline}`}
+						className={
+							"vivarium-critter absolute left-0 top-0 cursor-pointer transition-colors hover:text-theme-accent focus-visible:text-theme-accent " +
+							(spotlight === c.key ? "text-theme-accent" : "text-theme-text-secondary")
+						}
+					>
+						{/* At this scale the drawing itself is a smaller target
+						    than a fingertip, so the hit area is grown past it
+						    without changing the layout. */}
+						<span aria-hidden="true" className="absolute -inset-3" />
+						{c.habit.mode === "roll" ? (
+							// Only the beetle's part of the drawing: the ball is
+							// drawn separately so it can grow.
+							<span className="block h-full w-full overflow-hidden">
+								<Plate
+									artwork={c.art}
+									className="h-full"
+									style={{ width: c.width / BEETLE_CUT }}
+								/>
+							</span>
+						) : (
 							<Plate artwork={c.art} className="h-full w-full" />
-						</button>
-					) : (
-						<div
-							key={c.key}
-							ref={(el) => {
-								c.el = el;
-							}}
-							aria-hidden="true"
-							style={{
-								width: c.width,
-								height: c.height,
-								transformOrigin: "center bottom",
-								marginTop: -c.height,
-							}}
-							className="vivarium-critter pointer-events-none absolute left-0 top-0 text-theme-comment/45"
-						>
-							<Plate artwork={c.art} className="h-full w-full" />
-						</div>
-					),
-				)}
+						)}
+					</button>
+				))}
+
+				{notes !== "off" && <Annotations fading={notes === "fading"} />}
 
 				{/* The label for whatever is under the cursor, pinned to the
 				    tank's corner. A label that chased a walking animal would be
 				    unreadable, and would cover the thing you are looking at. */}
 				{hoveredSpecimen && (
-					<div className="pointer-events-none absolute bottom-3 left-3 right-3 z-10">
-						<div className="bw-bubble w-fit max-w-full rounded-sm border border-theme-border bg-theme-bg/90 px-3 py-1.5 backdrop-blur-sm">
-							<p className="font-display text-sm text-theme-text-primary">
+					<div className="pointer-events-none absolute left-4 top-4 z-[20000]">
+						<div className="bw-bubble w-fit max-w-full rounded-sm border border-theme-border bg-theme-bg px-3 py-1.5">
+							<p className="font-display text-base text-theme-text-primary">
 								{hoveredSpecimen.name}{" "}
-								<span className="font-mono text-xs italic text-theme-comment">
+								<span className="text-sm italic text-theme-comment">
 									{hoveredSpecimen.binomial}
 								</span>
 							</p>
 						</div>
 					</div>
 				)}
-
-				{/* glass: a sheen across the front and a highlight down one edge */}
-				<div
-					aria-hidden="true"
-					className="pointer-events-none absolute inset-0 rounded-[0.4rem] bg-gradient-to-br from-white/[0.07] via-transparent to-black/15"
-				/>
-				<div
-					aria-hidden="true"
-					className="pointer-events-none absolute inset-y-0 left-0 w-px bg-white/15"
-				/>
 			</div>
 
-			<div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-				<p className="font-mono text-xs text-theme-comment">
-					{reduced
-						? "reduced motion: the collection is holding still for you."
-						: "click a specimen to read its card. they will get out of your way."}
+			{/* Right padding keeps the button clear of the fixed tools in the
+			    bottom-right corner, which sit over this row on first load. */}
+			<div className="flex flex-wrap items-center justify-between gap-3 px-[max(4vmin,20px)] pr-24 pt-4">
+				{/* Left empty, the line still holds the button on the right when there is
+				    nothing to say. */}
+				<p className="text-sm text-theme-comment">
+					{reduced && "Reduced motion is on, so the collection is holding still."}
 				</p>
 				<button
 					type="button"
 					onClick={tapTheGlass}
-					className="shrink-0 rounded-sm border border-theme-border px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-theme-text transition hover:border-theme-accent/70 hover:bg-theme-accent/10 hover:text-theme-accent"
+					className="shrink-0 rounded-sm border border-theme-border px-3 py-1.5 text-sm text-theme-text transition-colors hover:border-theme-accent/70 hover:text-theme-accent"
 				>
-					tap the glass
+					Tap the glass
 				</button>
 			</div>
 		</div>
 	);
 }
 
-/** Moss, litter and a couple of fronds along the tank floor. Decorative. */
-function Substrate() {
+const NOTES_KEY = "smiduweorc-glass-notes-seen";
+
+function notesSeen(): boolean {
+	try {
+		return localStorage.getItem(NOTES_KEY) === "1";
+	} catch {
+		// Storage blocked: show them, and they go after the first touch as
+		// usual. Worst case they come back next visit.
+		return false;
+	}
+}
+
+function markNotesSeen(): void {
+	try {
+		localStorage.setItem(NOTES_KEY, "1");
+	} catch {
+		// nothing to do; see notesSeen
+	}
+}
+
+/** Notes written on the glass in the journal's pen, with an arrow each. Too
+ *  small to be worth reading on a phone, so they only appear from tablet
+ *  width up. */
+function Annotations({ fading }: { fading: boolean }) {
+	const pen = "font-hand text-sm leading-snug text-theme-text-secondary";
 	return (
-		<svg
+		<div
 			aria-hidden="true"
-			viewBox="0 0 400 120"
-			preserveAspectRatio="none"
-			className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] w-full text-theme-border"
+			className={
+				"pointer-events-none absolute inset-0 z-[20001] hidden transition-opacity duration-700 md:block " +
+				(fading ? "opacity-0" : "opacity-100")
+			}
 		>
-			<path
-				d="M0 62 C 40 50, 78 58, 116 54 C 154 50, 190 60, 230 56 C 268 52, 310 58, 348 52 C 372 48, 388 54, 400 52 L400 120 L0 120 Z"
-				className="fill-current opacity-40"
-			/>
-			<path
-				d="M0 84 C 52 76, 96 84, 148 80 C 200 76, 246 86, 300 82 C 344 78, 372 84, 400 80 L400 120 L0 120 Z"
-				className="fill-current opacity-65"
-			/>
-			<g
-				className="stroke-current opacity-35"
-				fill="none"
-				strokeWidth={2}
-				strokeLinecap="round"
-			>
-				<path d="M36 62 C 30 44, 34 30, 44 20" />
-				<path d="M44 20 C 38 26, 34 34, 34 44" />
-				<path d="M44 20 C 50 28, 52 38, 50 48" />
-				<path d="M300 58 C 296 40, 302 28, 314 18" />
-				<path d="M314 18 C 306 24, 300 32, 300 42" />
-				<path d="M314 18 C 320 28, 322 38, 318 46" />
-				<path d="M180 60 C 176 48, 178 38, 184 32" />
-				<path d="M196 58 C 200 46, 200 36, 196 30" />
-			</g>
-		</svg>
+			<div className="absolute bottom-[24%] right-[9%] w-44 -rotate-3 text-right">
+				<p className={pen}>the dung beetle's stash. go on, count them.</p>
+				<svg viewBox="0 0 60 60" className="ml-auto mr-0 mt-1 h-10 w-10 text-theme-text-secondary" fill="none">
+					<path
+						d="M40 4 C 46 20, 44 36, 30 52"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+					/>
+					<path d="M24 44 L 30 52 L 38 47" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+				</svg>
+			</div>
+			<div className="absolute left-[17%] top-[7%] w-48 rotate-2">
+				<svg viewBox="0 0 60 40" className="h-8 w-12 text-theme-text-secondary" fill="none">
+					<path
+						d="M56 34 C 40 30, 22 22, 8 8"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+					/>
+					<path d="M8 18 L 8 8 L 18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+				</svg>
+				<p className={pen}>the plants are stand-ins. the animals are not.</p>
+			</div>
+		</div>
 	);
 }
