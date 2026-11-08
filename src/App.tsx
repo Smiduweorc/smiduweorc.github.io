@@ -1,125 +1,221 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Vivarium } from "./vivarium/Vivarium";
 import { Cabinet } from "./Cabinet";
+import { FoodWeb } from "./FoodWeb";
 import { SpecimenCard } from "./SpecimenCard";
 import { SettingsButton } from "./SettingsButton";
 import { Lens, MagnifierToggle, useCoarsePointer } from "./Magnifier";
-import { InkUnderline, InkSquiggle } from "./Ink";
+import { InkSquiggle, InkUnderline } from "./Ink";
+import { StrayAnt } from "./StrayAnt";
+import {
+	AntTracks,
+	CoffeeRing,
+	Dirt,
+	Feather,
+	Frond,
+	LongLeaf,
+	PressedLeaf,
+	TapeScrap,
+} from "./Keepsakes";
 import { BagwormGate, BagwormParked, bagwormQuip } from "./bagworm/Bagworm";
 import { initializeTheme, type Theme } from "./theme";
 import { hasBeenGreeted, markGreeted } from "./greeting";
-import { type Specimen } from "./specimens";
+import { type Reading, type Specimen } from "./specimens";
 
 const ORG_URL = "https://github.com/Smiduweorc";
 
-/** The wall label under the tank: brass plate, two columns, no preamble. */
+// Casper's gutter: a share of the smaller viewport side, never under 20px,
+// so the page breathes on a monitor and still fits a phone. From tablet up
+// the right side is wider: that is the rail the lens, the lighting and
+// Baggie stand in, so they never sit on top of the page. From desktop up
+// it is wide enough for his speech bubble as well.
+const GUTTER = "px-[max(4vmin,20px)] md:pr-24 lg:pr-44";
+
+// Type has one job per face, everywhere on the page:
+//   display (Fraunces)  the name and the entry headings
+//   sans (Plex Sans)    anything you read as prose
+//   hand (Shantell)     anything written by hand: notes, labels on photos
+//   mono (Plex Mono)    catalogue data: plate numbers, stamps, download counts
+
+/** The wall label under the tank, as it has always read. */
 function Plaque() {
 	return (
-		<div className="grid gap-x-8 gap-y-4 border-y border-theme-border bg-theme-panel/30 px-5 py-5 sm:grid-cols-[13rem_1fr] sm:px-6">
+		<div className="grid gap-x-[6vw] gap-y-6 pb-[6vmin] pt-[5vmin] lg:grid-cols-[auto_1fr]">
 			<div data-note="'smiþ' as in smith, 'weorc' as in work. the þ is a thorn, it says 'th'.">
-				<p className="font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-theme-comment">
-					collection
-				</p>
-				{/* The page's h1. It used to be etched across the tank, which
-				    was a lot of shouting for a wall label to compete with. */}
-				<h1 className="font-display text-2xl text-theme-text-primary">
+				<h1 className="font-display text-[clamp(2.5rem,5vw,4.5rem)] font-semibold leading-none tracking-tight text-theme-text-primary">
 					Smiduweorc
 				</h1>
-				<p className="font-mono text-xs italic text-theme-text-secondary">
+				<p className="mt-3 font-mono text-sm italic text-theme-text-secondary">
 					smiþ-weorc, OE. smith-work
 				</p>
-				<p className="mt-2 font-mono text-[0.6875rem] leading-relaxed text-theme-comment">
-					est. 2026
-				</p>
+				<p className="mt-1 font-mono text-xs text-theme-comment">est. 2026</p>
 			</div>
 			<div
 				data-note="every project is named after a real animal that does the same job."
-				className="border-t border-theme-border/60 pt-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"
+				className="self-end"
 			>
-				<p className="font-hand mb-2 -rotate-[0.5deg] text-lg text-theme-accent">
+				<p className="font-hand mb-3 -rotate-[0.5deg] text-[clamp(1.25rem,1.8vw,1.75rem)] text-theme-accent">
 					Half Code, Half Insect Documentary.
 				</p>
-				<p className="leading-relaxed text-theme-text-secondary">
-					Most of our projects only exist after being forced to implement something multiple times and we just like to save time. (Also, we do not focus on cybersecurity.)
+				<p className="max-w-[52ch] leading-relaxed text-theme-text">
+					Most of our projects only exist after being forced to implement
+					something multiple times and we just like to save time. (Also, we
+					do not focus on cybersecurity.)
 				</p>
 			</div>
 		</div>
 	);
 }
 
-function SectionHeading({
+/** One entry in the journal: the plate number and a pencil note in the
+ *  margin, the heading and its content on the page. On a phone the margin
+ *  folds up above the entry. */
+function Entry({
 	plate,
+	title,
+	margin,
+	aside,
+	bagwormLine,
+	note,
+	keepsake,
 	children,
-	id,
 }: {
 	plate: number;
-	children: React.ReactNode;
-	id?: string;
+	title: string;
+	margin: string;
+	aside?: ReactNode;
+	bagwormLine?: string;
+	note?: string;
+	/** Things pressed into the margin under the pencil note, spread down
+	 *  its whole height so a long entry's margin is never bare. */
+	keepsake?: ReactNode[];
+	children: ReactNode;
 }) {
 	return (
-		<div id={id} className="mb-5 scroll-mt-6">
-			<p className="font-mono text-xs uppercase tracking-widest text-theme-comment">
-				plate no. {plate}
-			</p>
-			<h2 className="font-display text-3xl font-semibold text-theme-text-primary">
+		<section
+			data-bagworm-line={bagwormLine}
+			data-note={note}
+			className="grid gap-x-8 gap-y-3 py-[6vmin] md:grid-cols-[var(--margin)_1fr]"
+		>
+			{/* h-0 plus min-h-full: the margin stretches to the entry but
+			    never sets its height, so keepsakes cannot leave a gap. */}
+			<div className="md:flex md:h-0 md:min-h-full md:flex-col md:overflow-hidden md:pt-1">
+				<p className="font-mono text-xs uppercase tracking-widest text-theme-comment">
+					plate no. {plate}
+				</p>
+				<p className="font-hand mt-2 hidden -rotate-2 text-sm leading-snug text-theme-text-secondary md:block">
+					{margin}
+				</p>
+				{keepsake && (
+					<div className="mt-8 hidden flex-1 flex-col gap-16 md:flex">
+						{keepsake.map((k, i) => (
+							<div key={i}>{k}</div>
+						))}
+					</div>
+				)}
+			</div>
+			<div className="min-w-0">
+				<div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+					<div>
+						<h2 className="font-display text-3xl font-semibold text-theme-text-primary sm:text-4xl">
+							{title}
+						</h2>
+						<InkUnderline className="mt-1 w-32 text-theme-comment" />
+					</div>
+					{aside}
+				</div>
 				{children}
-			</h2>
-			<InkUnderline className="mt-1 w-32 text-theme-accent" />
+			</div>
+		</section>
+	);
+}
+
+/** The org profile's opinions, word for word. They sit two to a row, so
+ *  they are ordered to pair items of about the same length: a short one
+ *  beside a long one leaves a hole in the page. */
+const OPINIONS = [
+	"Solve one problem well.",
+	"Keep dependencies to a minimum.",
+	"We force you to make safe/opinionated default choices.",
+	"Ship software we'd actually want to use ourselves.",
+	"AI is fine, so long used reasonably. One human can't know everything.",
+	"DECIDE EARLY, DETAILS MATTER NEVER \"just do an MVP and make changes later\"! (Be it a spec or anything, this is important!)",
+	"We are language agnostic in a sense that we use whatever language is best suited for us to solve a problem, we pick up a language to use when ever needed, we don't force a runtime to do something it should not be doing.",
+	"We do this for the love of the game and we do not care about \"establishing a userbase or community\", unless there is a good reason (e.g. getting usability opinions).",
+	"We refuse blind compliance (if we adopt an RFC, there is a reason).",
+	"We are not anti-agile, we just don't really use it.",
+	"Have a little fun along the way.",
+	"Our libraries are generally insects.",
+];
+
+/** A numbered list written straight onto the ruled page, so any one can
+ *  be pointed at ("number eleven, though") and argued with. Lines are 2rem
+ *  tall to sit on the journal's 32px ruling from desktop up (a phone gets
+ *  them tighter), and each item is only as big as what it says. */
+function Opinions() {
+	return (
+		<ol className="grid gap-x-16 lg:grid-cols-2">
+			{OPINIONS.map((o, i) => (
+				<li key={o} className="flex gap-4 pb-4 leading-7 lg:pb-8 lg:leading-8">
+					<span className="w-6 shrink-0 font-mono text-xs leading-7 text-theme-comment lg:leading-8">
+						{String(i + 1).padStart(2, "0")}
+					</span>
+					<span className="text-theme-text">{o}</span>
+				</li>
+			))}
+		</ol>
+	);
+}
+
+function ReadingToggle({
+	reading,
+	onChange,
+}: {
+	reading: Reading;
+	onChange: (r: Reading) => void;
+}) {
+	const options: [Reading, string][] = [
+		["guide", "field guide"],
+		["spec", "spec sheet"],
+	];
+	return (
+		<div
+			role="group"
+			aria-label="Read the collection as"
+			className="flex items-center gap-1 rounded-sm border border-theme-border p-1"
+			data-note="same facts both ways. one has the jokes in."
+		>
+			{options.map(([value, label]) => (
+				<button
+					key={value}
+					type="button"
+					aria-pressed={reading === value}
+					onClick={() => onChange(value)}
+					className={
+						"rounded-sm px-3 py-2 text-sm transition-colors sm:py-1 " +
+						(reading === value
+							? "bg-theme-accent text-theme-bg"
+							: "text-theme-text-secondary hover:text-theme-text-primary")
+					}
+				>
+					{label}
+				</button>
+			))}
 		</div>
 	);
 }
 
-function HouseRules({ pinNotes }: { pinNotes: boolean }) {
-	const rules: { title: string; body: string; note: string }[] = [
-		{
-			title: "Insects first",
-			body: "We only name our projects after insects.",
-			note: "Except of course, special repos.",
-		},
-		{
-			title: "Safe by default, not by reminder",
-			body: "A README that says \"remember to check the audience claim\" has already failed. If a mistake can be made impossible to write, that is where it gets handled: in the types, in the shape of the API, or at runtime. The docs are there to explain why, not to hold the railing up.",
-			note: "if the docs you to stay safe by being vigilant, the api is wrong.",
-		},
-		{
-			title: "Numbers you can check",
-			body: "Every speed claim here comes from a harness that is public and runs on ordinary CI hardware. Cephalote-Bench exists because \"it's fast\" means nothing, and \"13,139 files in 2.1 seconds on a 4-vCPU runner, here is the workflow\" means something.",
-			note: "benchmarks on a tuned dev machine are just bragging.",
-		},
-		{
-			title: "There is no SDLC or corporate pressure",
-			body: "There is a difference between writing code for work and for fun, we are the latter, but we validate our projects in environments vigourously and settings similar to the former. We don't care about securing a userbase and we don't want to use 'AGILE' or any of the corporate slop. There is never any pressure for us like that.",
-			note: "we do it for the love of the game",
-		},
-	];
+/** The food web, laid open on the page. */
+function WebPage({ onOpen }: { onOpen: (s: Specimen) => void }) {
 	return (
-		<div className="grid gap-4 sm:grid-cols-2">
-			{rules.map((r, i) => (
-				<article
-					key={r.title}
-					data-note={r.note}
-					className={
-						"relative rounded-sm border border-theme-border bg-theme-panel/50 p-5 " +
-						(i % 2 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]")
-					}
-				>
-					<span
-						aria-hidden="true"
-						className="absolute left-1/2 top-2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-theme-accent/80 shadow-[0_1px_2px_rgb(0_0_0_/_0.35)]"
-					/>
-					<h3 className="font-display mb-2 mt-1 text-lg text-theme-text-primary">
-						{r.title}
-					</h3>
-					<p className="text-sm leading-relaxed text-theme-text-secondary">
-						{r.body}
-					</p>
-					{pinNotes && (
-						<p className="font-hand mt-3 -rotate-1 rounded-sm border border-theme-accent/40 bg-theme-accent/5 px-3 py-1.5 text-sm text-theme-text-primary">
-							{r.note}
-						</p>
-					)}
-				</article>
-			))}
+		<div>
+			<p className="mb-10 max-w-[60ch] text-theme-text-secondary">
+				Which animal came from which, and which jobs they pass to each other.
+				Solid lines are descent; dashed lines are work handed to a sibling.
+			</p>
+			<div id="food-web">
+				<FoodWeb onOpen={onOpen} />
+			</div>
 		</div>
 	);
 }
@@ -129,11 +225,11 @@ function App() {
 	const [lensOn, setLensOn] = useState(false);
 	const [gateOpen, setGateOpen] = useState(() => !hasBeenGreeted());
 	const [theme, setTheme] = useState<Theme>(() => initializeTheme());
+	const [reading, setReading] = useState<Reading>("guide");
+	// The photo the pointer is on, so its animal in the tank can stop and
+	// light up: the page and the glass are looking at the same thing.
+	const [spotlight, setSpotlight] = useState<string | null>(null);
 	const coarse = useCoarsePointer();
-
-	// With a finger there is nothing to hover, so the lens pins every note
-	// open in place instead of following a pointer that does not exist.
-	const pinNotes = lensOn && coarse;
 
 	const openSpecimen = useCallback((s: Specimen) => {
 		setOpen(s);
@@ -152,104 +248,135 @@ function App() {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-theme-bg text-theme-text antialiased">
-			{/* No hero block. The case comes first and the wall label sits
-			    under it, so the first thing on the page is the thing the page
-			    is about, already moving. */}
-			<div className="mx-auto max-w-6xl px-5 pt-6 sm:pt-8">
-				<Vivarium onOpen={openSpecimen} />
-			</div>
-			<div className="mx-auto mt-6 max-w-4xl sm:px-5">
+		// overflow-x-clip: the stray ant walks off the journal's right edge, and
+		// without this the whole page grows sideways to follow it.
+		<div className="min-h-screen overflow-x-clip bg-theme-bg text-theme-text antialiased">
+			{/* The tank is two dozen tab stops; this jumps past them. */}
+			<a
+				href="#journal"
+				className="fixed left-4 top-4 z-[80] -translate-y-24 rounded-sm bg-theme-accent px-4 py-2 font-medium text-theme-bg transition-transform focus:translate-y-0"
+			>
+				Skip to the collection
+			</a>
+			<Vivarium onOpen={openSpecimen} spotlight={spotlight} />
+
+			<div className={GUTTER}>
 				<Plaque />
-			</div>
 
-			<main className="mx-auto max-w-4xl px-5 py-10 sm:py-14">
-				<section
-					className="mb-14"
-					data-note="accession numbers run in the order things were made, not by importance."
-					data-bagworm-line="drawers! open them! that's what they're for!"
-				>
-					<SectionHeading plate={1} id="cabinet">
-						the cabinet
-					</SectionHeading>
-					<p className="mb-5 max-w-2xl text-theme-text-secondary">
-						Everything we have, sorted by what it is rather than what it is
-						written in. Pull a drawer open.
-					</p>
-					<Cabinet onOpen={openSpecimen} pinNotes={pinNotes} />
-				</section>
+				{/* The journal: one long ruled page with a margin line. */}
+				<main id="journal" tabIndex={-1} className="journal-page relative outline-none rounded-sm bg-theme-panel px-[max(3vmin,16px)] shadow-[3px_5px_0_rgb(0_0_0_/_0.3)] [--margin:9rem] lg:[--margin:12rem]">
+					<StrayAnt />
+					<Entry
+						plate={1}
+						title="the collection"
+						margin="click one. it'll tell you everything we know about it."
+						aside={<ReadingToggle reading={reading} onChange={setReading} />}
+						keepsake={[
+							<TapeScrap className="ml-10" angle={-14} />,
+							<LongLeaf className="ml-12" />,
+							<Dirt className="ml-2" />,
+							<PressedLeaf className="ml-6" />,
+							<TapeScrap className="ml-4" angle={9} />,
+							<Frond className="ml-14" />,
+							<Dirt className="ml-8 rotate-90" />,
+						]}
+						bagwormLine="tabs! click them! that's what they're for!"
+					>
+						<Cabinet
+							reading={reading}
+							onOpen={openSpecimen}
+							onSpotlight={setSpotlight}
+						/>
+					</Entry>
 
-				<section
-					className="mb-14"
-					data-note="written down so they can be argued with, not so they can be admired."
-					data-bagworm-line="the boring-but-true bit."
-				>
-					<SectionHeading plate={2} id="rules">
-						house rules
-					</SectionHeading>
-					<p className="mb-5 max-w-2xl text-theme-text-secondary">
-						What the things in the cabinet have in common, and what to expect
-						from whatever lands there next.
-					</p>
-					<HouseRules pinNotes={pinNotes} />
-				</section>
+					<Entry
+						plate={2}
+						title="food web"
+						margin="only what the READMEs say. a line nobody wrote down is a guess."
+						bagwormLine="it's a family tree. a weird one."
+						keepsake={[
+							<PressedLeaf className="ml-4" />,
+							<Dirt className="ml-10" />,
+							<LongLeaf className="ml-16" />,
+						]}
+					>
+						<WebPage onOpen={openSpecimen} />
+					</Entry>
 
-				<section
-					className="mb-14"
-					data-note="no contact form. the issue tracker is the contact form."
-					data-bagworm-line="the doors out. don't be a stranger."
-				>
-					<SectionHeading plate={3} id="elsewhere">
-						elsewhere
-					</SectionHeading>
-					<p className="mb-5 max-w-2xl text-theme-text-secondary">
-						It is all public. Issues and pull requests get read, and nothing
-						here is too precious to argue about.
-					</p>
-					<div className="flex flex-wrap items-center gap-3">
+					<Entry
+						plate={3}
+						title="opinions"
+						margin="written down so they can be argued with, not so they can be admired."
+						bagwormLine="the boring-but-true bit."
+						keepsake={[
+							<Frond className="ml-10" />,
+							<TapeScrap className="ml-6" angle={-20} />,
+							<Dirt className="ml-4 -rotate-45" />,
+						]}
+					>
+						<div className="relative">
+							{/* someone put their mug down on the opinions */}
+							<CoffeeRing className="absolute -bottom-6 left-[38%] hidden w-36 rotate-12 lg:block" />
+							<Opinions />
+						</div>
+					</Entry>
+
+					<Entry
+						plate={4}
+						title="elsewhere"
+						margin="no contact form. the issue tracker is the contact form."
+						bagwormLine="the doors out. don't be a stranger."
+						keepsake={[<Feather className="ml-8" />, <Dirt className="ml-14 scale-75" />]}
+					>
+						<p className="mb-5 max-w-[60ch] text-theme-text-secondary">
+							It is all public. Issues and pull requests get read, and
+							nothing here is too precious to argue about.
+						</p>
 						<a
 							href={ORG_URL}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex -rotate-1 items-center gap-2 rounded-sm border-2 border-theme-accent px-4 py-2 font-mono text-sm font-semibold uppercase tracking-wider text-theme-accent transition hover:bg-theme-accent/10"
+							className="font-hand inline-flex -rotate-1 items-center gap-2 rounded-sm border-2 border-theme-accent px-4 py-1.5 text-lg text-theme-accent transition-colors hover:bg-theme-accent/10"
 						>
-							the org on GitHub
+							the org on GitHub ↗
 						</a>
-						<a
-							href="https://www.npmjs.com/package/lacewing"
-							target="_blank"
-							rel="noopener noreferrer"
-							className="inline-flex items-center gap-2 rounded-sm border border-theme-border px-4 py-2 font-mono text-sm text-theme-text transition hover:bg-theme-border/30"
-						>
-							npm
-						</a>
-						<a
-							href="https://smiduweorc.github.io/lacewing/"
-							target="_blank"
-							rel="noopener noreferrer"
-							className="inline-flex items-center gap-2 rounded-sm border border-theme-border px-4 py-2 font-mono text-sm text-theme-text transition hover:bg-theme-border/30"
-						>
-							lacewing docs
-						</a>
-					</div>
-				</section>
+						<span className="ml-5 inline-flex flex-wrap gap-x-5 align-middle">
+							{[
+								["lacewing on npm", "https://www.npmjs.com/package/lacewing"],
+								["lacewing docs", "https://smiduweorc.github.io/lacewing/"],
+							].map(([label, href]) => (
+								<a
+									key={href}
+									href={href}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="font-hand inline-block py-2 text-lg text-theme-text underline decoration-theme-border underline-offset-4 transition-colors hover:decoration-theme-accent"
+								>
+									{label} ↗
+								</a>
+							))}
+						</span>
+						{/* the stray ant came through here at some point */}
+						<AntTracks className="mt-10 w-64 max-w-full -rotate-2" />
+					</Entry>
+				</main>
 
 				<footer
 					data-note="he is called baggie. he lives here. please do not feed him."
-					className="border-t border-theme-border/50 pt-6"
+					className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-8"
 				>
-					<InkSquiggle className="mb-3 text-theme-border" />
-					<div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-						<p className="font-mono text-xs leading-relaxed text-theme-comment">
+					<div>
+						<InkSquiggle className="mb-3 text-theme-border" />
+						<p className="font-mono text-xs text-theme-comment">
 							smiduweorc · <span className="italic">smiþ-weorc</span>, OE.
 							smith-work.
 						</p>
-						<p className="font-hand -rotate-2 text-lg text-theme-text-secondary">
-							kept by Baggie Da Bagworm
-						</p>
 					</div>
+					<p className="font-hand -rotate-2 text-lg text-theme-text-secondary">
+						kept by Baggie Da Bagworm
+					</p>
 				</footer>
-			</main>
+			</div>
 
 			{gateOpen ? (
 				<BagwormGate onDone={dismissGate} />
@@ -257,12 +384,21 @@ function App() {
 				<BagwormParked sceneKey={open ? `card:${open.id}` : "collection"} />
 			)}
 
-			<SpecimenCard specimen={open} onClose={() => setOpen(null)} />
+			<SpecimenCard
+				specimen={open}
+				reading={reading}
+				onClose={() => setOpen(null)}
+			/>
 			<Lens active={lensOn && !coarse} onDismiss={() => setLensOn(false)} />
 
 			{/* Tools, bottom-right, in the order you reach for them. */}
 			<div className="lens-exempt fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
-				<MagnifierToggle on={lensOn} onToggle={() => setLensOn((v) => !v)} />
+				{/* The lens follows a pointer. With only a finger there is
+				    nothing for it to follow, and the notes it would show are
+				    already written on the page. */}
+				{!coarse && (
+					<MagnifierToggle on={lensOn} onToggle={() => setLensOn((v) => !v)} />
+				)}
 				<SettingsButton currentTheme={theme} onThemeChange={setTheme} />
 			</div>
 		</div>

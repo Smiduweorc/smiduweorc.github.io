@@ -51,7 +51,7 @@ export const ARTWORK = {
 	bagworm: {
 		kind: "mask",
 		src: "/collection/bagworm.png",
-		ratio: 171 / 142,
+		ratio: 171 / 148,
 		scale: 0.58,
 	},
 	// Drawn from above, and unlike Antlion it has no wings to spread, so it is
@@ -165,8 +165,16 @@ export const ARTWORK = {
 	argia: {
 		kind: "mask",
 		src: "/collection/argia.png",
-		ratio: 672 / 261,
+		ratio: 573 / 261,
 		scale: 0.85,
+	},
+	// Same scene as Repletes, rule and starfield, but the stars are all round
+	// the body, so build-artwork.py despeckles it instead of cropping.
+	"rove-beetle": {
+		kind: "mask",
+		src: "/collection/rove-beetle.png",
+		ratio: 477 / 228,
+		scale: 0.9,
 	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
@@ -251,10 +259,12 @@ export function Plate({
 	artwork,
 	className = "",
 	alt = "",
+	style,
 }: {
 	artwork: ArtworkKey;
 	className?: string;
 	alt?: string;
+	style?: React.CSSProperties;
 }) {
 	const art = ARTWORK[artwork];
 
@@ -272,6 +282,7 @@ export function Plate({
 			aria-hidden={alt ? undefined : true}
 			className={"block bg-current " + className}
 			style={{
+				...style,
 				maskImage: `url(${art.src})`,
 				WebkitMaskImage: `url(${art.src})`,
 				maskRepeat: "no-repeat",

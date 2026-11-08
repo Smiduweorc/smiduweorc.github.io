@@ -66,6 +66,23 @@ const LINES = {
 	dizzy: "w-woah…",
 };
 
+// What the gate says, a line at a time. The name is in the display face and
+// the lamp's colour, the way it is on the plaque.
+const INTRO: ReactNode[] = [
+	<>
+		we are{" "}
+		<span className="font-display text-xl font-semibold text-theme-accent">
+			Smiduweorc
+		</span>
+		!
+	</>,
+	"we do Half Code, Half Insect Documentary.",
+	"most of our projects only exist after being forced to implement something multiple times, and we just like to save time. (also, we do not focus on cybersecurity.)",
+	LINES.welcome,
+];
+// How long each line stays up: long enough to read, longer for longer lines.
+const INTRO_BEAT_MS = [2600, 3000, 6000];
+
 /** True on touch devices: no cursor, so no hover and no continuous stream of
  * "where you are pointing" to lean toward. Several behaviours below need a
  * different input to stand in for it. */
@@ -213,9 +230,11 @@ function Bubble({
 // One door, one button. The old two-audience fork is gone: everything here
 // is aimed at developers, so asking would only have added a click.
 function EnterButton({
+	label,
 	onEnter,
 	onHover,
 }: {
+	label: string;
 	onEnter: () => void;
 	onHover: (leaning: boolean) => void;
 }) {
@@ -236,9 +255,11 @@ function EnterButton({
 			<button
 				{...consider}
 				onClick={onEnter}
-				className="rounded-lg border border-theme-accent/70 bg-theme-accent/20 px-4 py-2 text-sm font-medium text-theme-text-primary transition hover:bg-theme-accent/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent"
+				// Outlined in the lamp's colour on the bubble's own paper, and
+				// only lit up once you are actually on it.
+				className="rounded-lg border border-theme-accent bg-theme-panel px-4 py-2 text-sm font-medium text-theme-text-primary transition-colors hover:bg-theme-accent hover:text-theme-bg focus-visible:bg-theme-accent focus-visible:text-theme-bg"
 			>
-				let me in
+				{label}
 			</button>
 		</div>
 	);
@@ -291,7 +312,9 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 	const [stage, setStage] = useState<"enter" | "ask" | "react" | "leave">(
 		"enter",
 	);
-	const [line, setLine] = useState<string | null>(reduced ? LINES.hi : null);
+	const [line, setLine] = useState<ReactNode>(reduced ? LINES.hi : null);
+	/** Which INTRO line is up, once the introduction has started. */
+	const [step, setStep] = useState<number | null>(null);
 	const [boing, setBoing] = useState(false);
 	const [fading, setFading] = useState(false);
 	const answered = useRef(false);
@@ -323,16 +346,25 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 	// The cold open, frame by frame (BEHAVIOUR.md §cold open).
 	useEffect(() => {
 		if (reduced) {
+			// No talking in turns without motion: the whole introduction at
+			// once, so nobody has to wait for it.
 			timers.later(() => setFrame("hi"), 300);
 			timers.later(() => {
 				setStage("ask");
 				setFrame("talk");
-				setLine(LINES.welcome);
+				setLine(
+					<span className="flex flex-col gap-2">
+						{INTRO.map((l, i) => (
+							<span key={i}>{l}</span>
+						))}
+					</span>,
+				);
 			}, 1200);
 			return;
 		}
 		// 1. can slides in (CSS) → 2. boing, springs up → 3. slight wave
-		// → 4. the welcome, and the door.
+		// → 4. who we are, a line at a time, with the door open throughout
+		// so nobody is made to sit through it.
 		timers.later(() => {
 			setFrame("front");
 			setBoing(true);
@@ -343,19 +375,36 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 			setLine(LINES.hi);
 		}, 1800);
 		timers.later(() => {
+			if (answered.current) return;
 			setStage("ask");
 			setFrame("talk");
-			setLine(LINES.welcome);
-			armImpatience();
+			setStep(0);
 		}, 3200);
 	}, []);
+
+	// One line at a time. Each moves on by itself once it has had time to be
+	// read, or straight away on "next"; the last one waits for "let me in".
+	useEffect(() => {
+		if (step === null || reduced) return;
+		setLine(INTRO[step]);
+		if (step === INTRO.length - 1) {
+			armImpatience();
+			return;
+		}
+		const id = window.setTimeout(
+			() => setStep((s) => (s === null ? s : s + 1)),
+			INTRO_BEAT_MS[step] ?? 3000,
+		);
+		return () => clearTimeout(id);
+	}, [step, reduced, armImpatience]);
+
+	const last = reduced || step === INTRO.length - 1;
 
 	const onHover = useCallback(
 		(leaning: boolean) => {
 			if (answered.current || stage !== "ask") return;
 			stopImpatience();
 			setFrame(leaning ? "leanR" : "talk");
-			setLine(LINES.welcome);
 			if (!leaning) armImpatience();
 		},
 		[stage, stopImpatience, armImpatience],
@@ -380,6 +429,16 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 		timers.later(onDone, 2400);
 	}, [onDone, stopImpatience, timers]);
 
+	// Escape is the way out of any dialog, this one included, even before
+	// the button has appeared.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") enter();
+		};
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [enter]);
+
 	return (
 		<div
 			role="dialog"
@@ -396,7 +455,11 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 						<Bubble className="mx-auto text-center">
 							<span>{line}</span>
 							{stage === "ask" && (
-								<EnterButton onEnter={enter} onHover={onHover} />
+								<EnterButton
+									label={last ? "let me in" : "next"}
+									onEnter={last ? enter : () => setStep((s) => (s ?? 0) + 1)}
+									onHover={onHover}
+								/>
 							)}
 						</Bubble>
 					)}
@@ -439,7 +502,6 @@ const EDGE_MARGIN = 12; // gap kept from the screen edges when parked
 const DROP_PX = 28; // how far he falls when you let go
 const SECTION_GRACE_MS = 11000; // pause section-following this long after a drag
 const SCROLL_SETTLE_MS = 260; // he only moves once scrolling has stopped
-const HEADING_GAP = 20; // gap between a heading and where he stands beside it
 const BUBBLE_CLEARANCE_PX = 100; // room the speech bubble needs above him
 
 export function BagwormParked({ sceneKey }: { sceneKey: string }) {
@@ -467,8 +529,8 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 
 	const wormSize = useCallback(() => {
 		const el = rootRef.current;
-		// Fallbacks match the w-16/w-24 box above, at the tallest frame's aspect.
-		return { w: el?.offsetWidth ?? 96, h: el?.offsetHeight ?? 123 };
+		// Fallbacks match the w-14/w-16 box below, at the tallest frame's aspect.
+		return { w: el?.offsetWidth ?? 64, h: el?.offsetHeight ?? 82 };
 	}, []);
 
 	// The header is sticky at the very top of the page, so however close a
@@ -505,36 +567,24 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		el.style.top = `${posRef.current.y}px`;
 	}, []);
 
-	// Where he stands to keep a heading company: just past its right edge,
-	// feet level with its baseline.
-	//
-	// Nothing ever fits beside a heading on a phone (a full-width heading plus
-	// HEADING_GAP plus his own width always overflows), so that path used to
-	// pin him to the bottom-left corner for an entire mobile session and he
-	// never appeared to walk anywhere. Instead he now paces the bottom edge,
-	// swapping corners each time he is called over, so being summoned still
-	// reads as movement.
+	// Where he stands: always the same perch, bottom-right, just above the
+	// lens and lighting buttons. Standing beside headings put him on top of
+	// whatever sat next to them (the tagline, the intro on a phone), so he
+	// stays out of the reading column and only his bubble ever reaches in.
 	const standBeside = useCallback(
-		(el: Element | null): Pos => {
+		(): Pos => {
 			const { w, h } = wormSize();
-			if (el) {
-				const r = el.getBoundingClientRect();
-				const x = r.right + HEADING_GAP;
-				if (x + w + EDGE_MARGIN <= window.innerWidth) {
-					return clamp(x, r.bottom - h);
-				}
-			}
-			const floor = window.innerHeight - h - EDGE_MARGIN;
-			if (!el) return clamp(EDGE_MARGIN, floor);
-			const onLeft = posRef.current.x + w / 2 < window.innerWidth / 2;
-			return clamp(onLeft ? window.innerWidth - w - EDGE_MARGIN : EDGE_MARGIN, floor);
+			const tools = document.querySelector(".lens-exempt");
+			const floor =
+				(tools?.getBoundingClientRect().top ?? window.innerHeight) - 8;
+			return clamp(window.innerWidth - w - 24, floor - h);
 		},
 		[clamp, wormSize],
 	);
 
-	// Place him next to the page title on mount, before first paint.
+	// Put him on his perch on mount, before first paint.
 	useLayoutEffect(() => {
-		posRef.current = standBeside(document.querySelector("main h1, main h2"));
+		posRef.current = standBeside();
 		applyPos(false);
 	}, [applyPos, standBeside]);
 
@@ -671,7 +721,7 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 	const CONTEXT_LINE_MS = 6000;
 
 	const speakAt = useCallback(
-		(anchor: HTMLElement | null, line?: string) => {
+		(_anchor: HTMLElement | null, line?: string) => {
 			if (
 				draggingRef.current ||
 				settling.current ||
@@ -679,8 +729,11 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 			) {
 				return;
 			}
-			posRef.current = standBeside(anchor);
+			posRef.current = standBeside();
 			applyPos(true);
+			// A phone has no spare room for a bubble: it always lands on the
+			// text being read. There he only reacts to being poked.
+			if (window.innerWidth < 640) line = undefined;
 			if (modeRef.current === "napping" || modeRef.current === "ducked") {
 				backToFront();
 			}
@@ -710,7 +763,13 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 	const moveToSection = useCallback(
 		(section: HTMLElement | null) => {
 			const heading = section?.querySelector<HTMLElement>("h1, h2") ?? section;
-			speakAt(heading, section?.dataset.bagwormLine);
+			// A section's line is about what is in front of you, so it waits
+			// until the heading is actually on screen. On first load the
+			// first section is still below the tank, and "click the tabs"
+			// with no tabs in sight is just noise.
+			const r = heading?.getBoundingClientRect();
+			const visible = !!r && r.top >= 0 && r.bottom <= window.innerHeight;
+			speakAt(heading, visible ? section?.dataset.bagwormLine : undefined);
 		},
 		[speakAt],
 	);
@@ -1039,13 +1098,13 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 	return (
 		<div
 			ref={rootRef}
-			className="fixed z-40 w-16 sm:w-24"
+			className="fixed z-40 w-14 sm:w-16"
 			data-testid="bagworm-parked"
 		>
 			{line && (
 				<div
 					className={
-						"absolute w-60 max-w-[70vw] " +
+						"absolute w-36 max-w-[70vw] " +
 						(bubbleBelow ? "top-full mt-2 " : "bottom-full mb-2 ") +
 						(anchorRight ? "right-0" : "left-0")
 					}
