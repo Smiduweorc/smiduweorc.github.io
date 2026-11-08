@@ -194,13 +194,3 @@ export function Lens({
 		</>
 	);
 }
-
-/** The touch fallback: notes pinned open, in place. */
-export function PinnedNote({ note, on }: { note: string; on: boolean }) {
-	if (!on) return null;
-	return (
-		<p className="font-hand mt-2 -rotate-[0.6deg] rounded-sm border border-theme-accent/40 bg-theme-accent/5 px-3 py-1.5 text-sm leading-snug text-theme-text-primary">
-			{note}
-		</p>
-	);
-}
