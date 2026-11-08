@@ -4,14 +4,14 @@
 	/* Default lighting: the keeper's room after dark (see theme.ts for the
 	   rest of the shelf). These are only the fallbacks; theme.ts overwrites
 	   the same custom properties on :root at runtime. */
-	--color-theme-bg: #1b1a15;
+	--color-theme-bg: #16150f;
 	--color-theme-panel: #26241c;
 	--color-theme-border: #3c382b;
-	--color-theme-comment: #867a64;
-	--color-theme-text-secondary: #a89b83;
-	--color-theme-text: #cabfa8;
-	--color-theme-text-primary: #f0e7d4;
-	--color-theme-accent: #c7a04a;
+	--color-theme-comment: #988b72;
+	--color-theme-text-secondary: #bcaf96;
+	--color-theme-text: #dcd2bc;
+	--color-theme-text-primary: #f7f0e1;
+	--color-theme-accent: #e0b04a;
 
 	/* Four families, strict jobs (loaded in main.tsx):
 	   display = headings, sans = prose, mono = catalogue data,
@@ -30,6 +30,12 @@ html::-webkit-scrollbar {
 	display: none;
 }
 
+/* One focus ring for everything: 2px in the accent, clear of the edge. */
+:focus-visible {
+	outline: 2px solid var(--color-theme-accent);
+	outline-offset: 3px;
+}
+
 * {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
@@ -37,7 +43,8 @@ html::-webkit-scrollbar {
 
 /* ── Stationery ──────────────────────────────────────────────────── */
 
-/* A rubber-stamp mark: mono, inked in the accent, pressed on crooked.
+/* A rubber-stamp mark: mono, in faded ink, pressed on crooked. Not the
+   accent: that is kept for the few things that should stand out.
    The uneven radii and the diagonal mask fake a worn stamp pad. */
 .stamp {
 	display: inline-block;
@@ -47,7 +54,7 @@ html::-webkit-scrollbar {
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	line-height: 1;
-	color: var(--color-theme-accent);
+	color: var(--color-theme-text-secondary);
 	border: 1.5px solid currentColor;
 	border-radius: 3px 6px 4px 7px / 6px 4px 7px 3px;
 	padding: 3px 6px;
@@ -61,16 +68,20 @@ html::-webkit-scrollbar {
 }
 
 /* Ruled lines behind the taxonomy table on a specimen card. Local
-   attachment keeps the rules pinned to the text if the card scrolls. */
-.index-card-lines {
-	background-attachment: local;
-	background-image: repeating-linear-gradient(
-		to bottom,
-		transparent 0,
-		transparent 27px,
-		color-mix(in srgb, var(--color-theme-border) 55%, transparent) 27px,
-		color-mix(in srgb, var(--color-theme-border) 55%, transparent) 28px
-	);
+   attachment keeps the rules pinned to the text if the card scrolls. Only
+   from small-tablet width: on a phone the rows stack label over value and
+   no longer keep to a fixed pitch. */
+@media (min-width: 640px) {
+	.index-card-lines {
+		background-attachment: local;
+		background-image: repeating-linear-gradient(
+			to bottom,
+			transparent 0,
+			transparent 27px,
+			color-mix(in srgb, var(--color-theme-border) 55%, transparent) 27px,
+			color-mix(in srgb, var(--color-theme-border) 55%, transparent) 28px
+		);
+	}
 }
 
 /* ── The vivarium ────────────────────────────────────────────────── */
@@ -148,6 +159,77 @@ body.lens-active .lens-exempt * {
 	cursor: pointer !important;
 }
 
+/* ── The journal ──────────────────────────────────────────────────── */
+
+/* Ruled paper: a faint rule every 32px. From tablet width up, a margin line
+   in faded ink runs down the page just right of the margin column, the
+   way an exercise book has one in red. */
+.journal-page {
+	background-image: repeating-linear-gradient(
+		to bottom,
+		transparent 0,
+		transparent 31px,
+		color-mix(in srgb, var(--color-theme-border) 40%, transparent) 31px,
+		color-mix(in srgb, var(--color-theme-border) 40%, transparent) 32px
+	);
+}
+@media (min-width: 768px) {
+	.journal-page {
+		background-image:
+			linear-gradient(
+				to right,
+				transparent calc(max(3vmin, 16px) + var(--margin) + 0.9rem),
+				color-mix(in srgb, var(--color-theme-comment) 45%, transparent) 0,
+				color-mix(in srgb, var(--color-theme-comment) 45%, transparent) calc(max(3vmin, 16px) + var(--margin) + 0.9rem + 1px),
+				transparent 0
+			),
+			repeating-linear-gradient(
+				to bottom,
+				transparent 0,
+				transparent 31px,
+				color-mix(in srgb, var(--color-theme-border) 40%, transparent) 31px,
+				color-mix(in srgb, var(--color-theme-border) 40%, transparent) 32px
+			);
+	}
+}
+
+/* An ant that has got out of the tank and is crossing the journal along its
+   top edge. Most of the cycle it is off the page; it crosses, then is gone
+   for a while, so it reads as an event rather than a conveyor. */
+@keyframes stray-walk {
+	0% { transform: translateX(-3rem); opacity: 1; }
+	45% { transform: translateX(calc(100cqw + 3rem)); opacity: 1; }
+	45.01%, 100% { transform: translateX(calc(100cqw + 3rem)); opacity: 0; }
+}
+.stray-ant {
+	animation: stray-walk 40s linear infinite;
+	animation-delay: 6s;
+}
+@keyframes stray-step {
+	0%, 100% { transform: rotate(-4deg) translateY(0); }
+	50% { transform: rotate(4deg) translateY(-1px); }
+}
+.stray-ant > span {
+	animation: stray-step 0.3s ease-in-out infinite;
+}
+
+/* ── The gallery wall ────────────────────────────────────────────── */
+
+/* A framed specimen at rest still breathes: a slow sway inside its frame.
+   Hovering sets it walking on the spot, the same rock at a stride's pace. */
+@keyframes specimen-idle {
+	0%, 100% { transform: rotate(-1.4deg) translateY(0); }
+	50% { transform: rotate(1.4deg) translateY(-2px); }
+}
+.specimen-idle {
+	animation: specimen-idle 3.4s ease-in-out infinite;
+	transform-origin: 50% 90%;
+}
+.group:hover .specimen-idle,
+.group:focus-visible .specimen-idle {
+	animation-duration: 0.5s;
+}
+
 /* ── Bagworm ─────────────────────────────────────────────────────── */
 
 /* the closed can slides in from off-screen and settles with a wobble */
@@ -213,7 +295,10 @@ body.lens-active .lens-exempt * {
 	.bw-boing,
 	.bw-bob,
 	.bw-bubble,
-	.bw-zzz span {
+	.bw-zzz span,
+	.specimen-idle,
+	.stray-ant,
+	.stray-ant > span {
 		animation: none;
 	}
 }
