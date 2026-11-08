@@ -9,6 +9,16 @@ interface SettingsButtonProps {
 export function SettingsButton({ currentTheme, onThemeChange }: SettingsButtonProps) {
 	const [isOpen, setIsOpen] = useState(false)
 	const panelRef = useRef<HTMLDivElement>(null)
+	const buttonRef = useRef<HTMLButtonElement>(null)
+
+	// Opening moves focus onto the current lighting, so Tab walks the
+	// list instead of the page behind; closing hands it back to the button.
+	useEffect(() => {
+		if (!isOpen) return
+		panelRef.current?.querySelector<HTMLButtonElement>("[aria-pressed=true]")?.focus()
+		const button = buttonRef.current
+		return () => button?.focus()
+	}, [isOpen])
 
 	// Escape closes the shelf; without it the only way out is a click, which
 	// is awkward when the thing was opened from the keyboard.
@@ -31,6 +41,7 @@ export function SettingsButton({ currentTheme, onThemeChange }: SettingsButtonPr
 	return (
 		<div className="relative">
 			<button
+				ref={buttonRef}
 				type="button"
 				onClick={() => setIsOpen(!isOpen)}
 				aria-expanded={isOpen}
