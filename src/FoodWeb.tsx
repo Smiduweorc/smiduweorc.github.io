@@ -179,14 +179,17 @@ export function FoodWeb({ onOpen }: { onOpen: (s: Specimen) => void }) {
 						);
 					})}
 
-					{/* The cocoon casts, boxed off as one, each still openable. */}
+					{/* The cocoon casts, boxed off as one, each still openable. Its
+					    height is a minimum and it is pinned by its centre: at the
+					    narrow phone width the names wrap to more rows than the
+					    box holds, so it grows both ways instead of spilling. */}
 					<div
-						className="absolute flex flex-col items-center justify-center gap-2 rounded-sm border-2 border-dashed border-theme-border px-4"
+						className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-sm border-2 border-dashed border-theme-border bg-theme-panel px-3 py-2 md:gap-2 md:px-4"
 						style={{
-							left: `${((BOX.x - BOX.w / 2) / W) * 100}%`,
-							top: `${((BOX.y - BOX.h / 2) / H) * 100}%`,
+							left: `${(BOX.x / W) * 100}%`,
+							top: `${(BOX.y / H) * 100}%`,
 							width: `${(BOX.w / W) * 100}%`,
-							height: `${(BOX.h / H) * 100}%`,
+							minHeight: `${(BOX.h / H) * 100}%`,
 						}}
 					>
 						<span className="font-display text-xl text-theme-text-primary">templates</span>
