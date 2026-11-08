@@ -134,7 +134,7 @@ function Entry({
  *  they are ordered to pair items of about the same length: a short one
  *  beside a long one leaves a hole in the page. */
 const OPINIONS = [
-	"Solve one problem well.",
+	"Solve one problem (or type of problem) well.",
 	"Keep dependencies to a minimum.",
 	"We force you to make safe/opinionated default choices.",
 	"Ship software we'd actually want to use ourselves.",
@@ -292,12 +292,12 @@ function App() {
 					<Entry
 						plate={2}
 						title="food web"
-						margin="only what the READMEs say. a line nobody wrote down is a guess."
+						margin="we don't expect anyone one else to really use these. our libraries were made because we kept rewriting the same code."
 						bagwormLine="it's a family tree. a weird one."
 						keepsake={[
 							<PressedLeaf className="ml-4" />,
 							<Dirt className="ml-10" />,
-							<LongLeaf className="ml-16" />,
+							<LongLeaf className="ml-10" />,
 						]}
 					>
 						<WebPage onOpen={openSpecimen} />
