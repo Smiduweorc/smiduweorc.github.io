@@ -5,7 +5,7 @@ Every repo that has its own drawing ships a hand-drawn side-on study at
 assets/logo.png (or .jpeg): white line art on a near-black field. This script fetches each one and
 converts luminance into the alpha channel, so the site can paint the drawing
 with `background-color: currentColor` and have it sit at the right contrast
-against all fifteen palettes. One file per animal instead of one per animal
+against every palette. One file per animal instead of one per animal
 per theme.
 
 Re-run after changing a logo upstream:
@@ -35,13 +35,13 @@ OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "collection")
 #
 # Bagworm's logo is the worm-on-a-spring above a *photograph* of an aluminium
 # can. The line art survives being turned into a mask. The photo does not: it
-# flattens into a grey slab. So that one is cut just above the can's rim and
+# flattens into a grey slab. So that one is cut above the can's rim and
 # only the worm rides along, which is also the half people recognise.
 #
 # Repletes is drawn as a scene rather than a specimen: the ant hangs upside
 # down from a rule with a starfield above it. Luminance cannot tell scenery
 # from animal, so the rule and every star would come through as linework. The
-# cut is just below the rule, which loses the tips of the raised legs and
+# cut is below the rule, which loses the tips of the raised legs and
 # keeps the head, thorax and the honeypot abdomen that is the whole point.
 #
 # Termite's logo is the odd one out twice over: orange fill on near-black
@@ -87,7 +87,7 @@ SOURCES: dict[str, tuple[str, str, float, float]] = {
     "RoveBeetle": ("rove-beetle", "logo.png", 0.18, 1.0),
 }
 
-# Bagworm is cut at the row just above the can's rim, which leaves the bottom
+# Bagworm is cut at the row above the can's rim, which leaves the bottom
 # of the lowest spring coil open where the rim used to close it. The last
 # stretch of that curve is drawn back in, at the drawing's own stroke width,
 # along the ellipse the rest of the coil follows.

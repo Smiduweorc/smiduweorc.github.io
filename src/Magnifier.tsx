@@ -1,18 +1,7 @@
-// The hand lens.
-//
-// Half the fun of a collection is what somebody pencilled in the margin, and a
-// wall label has no room for it. Those notes live on `data-note` attributes in
-// the markup; the lens is what makes them legible.
-//
-// With a cursor: a glass follows the pointer and reads out whatever
-// `[data-note]` element is under it.
-// With a finger: nothing to hover with, so the toggle pins every note open in
-// place instead. Same information, different input.
-//
-// Two things this has to get right, because the lens hides the real cursor:
-// there is always a stated way out (Escape, or the button, which keeps its
-// cursor), and the glass always says something, even over bare page, so it
-// never looks broken.
+// The hand lens reads the data-note margin notes under the pointer. With a
+// finger there is no hover, so the toggle pins every note open instead.
+// The lens hides the real cursor, so there is always a stated way out (Escape,
+// or the button, which keeps its cursor).
 
 import { useEffect, useRef, useState } from "react";
 
@@ -144,8 +133,7 @@ export function Lens({
 
 	return (
 		<>
-			{/* Says what is in your hand and how to put it down. Without this
-			    the hidden cursor is a trap rather than a bit of fun. */}
+			{/* Hidden cursor needs a stated way out. */}
 			<div
 				role="status"
 				className="pointer-events-none fixed inset-x-0 top-4 z-[56] flex justify-center px-4"
@@ -163,7 +151,6 @@ export function Lens({
 				style={{ width: LENS_SIZE, height: LENS_SIZE }}
 			>
 				<div className="lens-glass h-full w-full rounded-full border-[3px] border-theme-accent/80 shadow-[0_6px_24px_rgb(0_0_0_/_0.45)]" />
-				{/* the handle, angled off the bottom-right like a real hand lens */}
 				<div
 					className="absolute h-[46px] w-[9px] rounded-full bg-theme-accent/80"
 					style={{

@@ -7,14 +7,13 @@ import {
 	type ReactNode,
 } from "react";
 
-// Ported from grml's lab, where Bagworm was hired first. The behaviour is
-// unchanged. What left with the port is the two-audience gate: this site has
-// one audience (developers), so the cold open greets you and gets out of the
-// way rather than asking which tour you want.
+// Ported from grml's lab. The behaviour is unchanged. The two-audience gate is gone:
+// this site has one audience (developers), so the cold open greets you and gets out of
+// the way rather than asking which tour you want.
 //
 // Frame-accurate behaviour spec: image_assets/bagworm/svg/BEHAVIOUR.md
-// All frames share the same width and are registered on the can's base,
-// so bottom-centre alignment keeps the animation stable across swaps.
+// All frames share the same width and are registered on the can's base, so
+// bottom-centre alignment keeps the animation stable across swaps.
 
 type Frame =
 	| "can"
@@ -58,16 +57,14 @@ export function bagwormQuip(anchor: HTMLElement | null, line: string) {
 }
 
 const LINES = {
-	hi: "oh! hi! 👋",
+	hi: "oh! hi!",
 	welcome:
 		"welcome to smiduweorc! we keep the whole collection alive in there. mind the glass.",
 	enter: "go on then, have a poke around!",
-	impatient: "…still there? 👀",
-	dizzy: "w-woah…",
+	impatient: "...still there?",
+	dizzy: "w-woah...",
 };
 
-// What the gate says, a line at a time. The name is in the display face and
-// the lamp's colour, the way it is on the plaque.
 const INTRO: ReactNode[] = [
 	<>
 		we are{" "}
@@ -80,7 +77,6 @@ const INTRO: ReactNode[] = [
 	"most of our projects only exist after being forced to implement something multiple times, and we just like to save time. (also, we do not focus on cybersecurity.)",
 	LINES.welcome,
 ];
-// How long each line stays up: long enough to read, longer for longer lines.
 const INTRO_BEAT_MS = [2600, 3000, 6000];
 
 /** True on touch devices: no cursor, so no hover and no continuous stream of
@@ -101,7 +97,6 @@ function useCoarsePointer(): boolean {
 	return coarse;
 }
 
-// ── Tilt access ──
 // A phone's accelerometer is the closest thing touch has to a cursor: it is
 // continuous, and it says which way you are leaning. iOS 13+ only hands it
 // over from inside a user gesture, so the gate's choice tap does the asking
@@ -154,7 +149,6 @@ function usePrefersReducedMotion(): boolean {
 	return reduced;
 }
 
-/** setTimeout/setInterval that clean themselves up on unmount. */
 function useTimers() {
 	const ids = useRef<{ t: number[]; i: number[]; r: number[] }>({
 		t: [],
@@ -227,8 +221,6 @@ function Bubble({
 	);
 }
 
-// One door, one button. The old two-audience fork is gone: everything here
-// is aimed at developers, so asking would only have added a click.
 function EnterButton({
 	label,
 	onEnter,
@@ -256,7 +248,7 @@ function EnterButton({
 				{...consider}
 				onClick={onEnter}
 				// Outlined in the lamp's colour on the bubble's own paper, and
-				// only lit up once you are actually on it.
+				// only lit up once you are on it.
 				className="rounded-lg border border-theme-accent bg-theme-panel px-4 py-2 text-sm font-medium text-theme-text-primary transition-colors hover:bg-theme-accent hover:text-theme-bg focus-visible:bg-theme-accent focus-visible:text-theme-bg"
 			>
 				{label}
@@ -301,7 +293,6 @@ function WormImage({
 	);
 }
 
-// ─── The gate: cold-open greeter overlay ─────────────────────────────
 
 export function BagwormGate({ onDone }: { onDone: () => void }) {
 	const reduced = usePrefersReducedMotion();
@@ -343,7 +334,7 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 		}, 6500);
 	}, [reduced, stopImpatience, timers]);
 
-	// The cold open, frame by frame (BEHAVIOUR.md §cold open).
+	// The cold open, frame by frame (BEHAVIOUR.md, cold open).
 	useEffect(() => {
 		if (reduced) {
 			// No talking in turns without motion: the whole introduction at
@@ -362,9 +353,7 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 			}, 1200);
 			return;
 		}
-		// 1. can slides in (CSS) → 2. boing, springs up → 3. slight wave
-		// → 4. who we are, a line at a time, with the door open throughout
-		// so nobody is made to sit through it.
+		// The door stays open throughout, so nobody is made to sit through it.
 		timers.later(() => {
 			setFrame("front");
 			setBoing(true);
@@ -481,15 +470,12 @@ export function BagwormGate({ onDone }: { onDone: () => void }) {
 	);
 }
 
-// ─── Parked mascot: idle life and drag toy ───────────────────────────
-// Poking the worm gets you a wave and nothing else. He is furniture with
-// opinions, not navigation.
 
 type ParkedMode = "popped" | "napping" | "dizzy" | "ducked";
 
 type Pos = { x: number; y: number };
 
-// Drag/idle tuning. See BEHAVIOUR.md §Interactions.
+// Drag/idle tuning. See BEHAVIOUR.md, Interactions.
 const DRAG_FLOP_AT = 6; // px of horizontal travel before he flops that way
 const NAP_AFTER_MS = 9000;
 const WAKE_DISTANCE_PX = 140;
@@ -521,7 +507,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 	const modeRef = useRef(mode);
 	modeRef.current = mode;
 
-	// ── Free positioning ──
 	// The can lives at an absolute (left, top). We drive the element's style
 	// directly (like a game object) so drags don't thrash React state.
 	const posRef = useRef<Pos>({ x: EDGE_MARGIN, y: 0 });
@@ -567,7 +552,7 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		el.style.top = `${posRef.current.y}px`;
 	}, []);
 
-	// Where he stands: always the same perch, bottom-right, just above the
+	// Where he stands: always the same perch, bottom-right, above the
 	// lens and lighting buttons. Standing beside headings put him on top of
 	// whatever sat next to them (the tagline, the intro on a phone), so he
 	// stays out of the reading column and only his bubble ever reaches in.
@@ -582,13 +567,11 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		[clamp, wormSize],
 	);
 
-	// Put him on his perch on mount, before first paint.
 	useLayoutEffect(() => {
 		posRef.current = standBeside();
 		applyPos(false);
 	}, [applyPos, standBeside]);
 
-	// Keep him on-screen through resizes / orientation changes.
 	useEffect(() => {
 		const onResize = () => {
 			posRef.current = clamp(posRef.current.x, posRef.current.y);
@@ -604,7 +587,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		timers.later(() => setBoing(false), 600);
 	}, [reduced, timers]);
 
-	// A small head-only tilt for character while he's being flung about.
 	const setWormLean = useCallback((deg: number) => {
 		if (imgRef.current) {
 			imgRef.current.style.transform = deg ? `rotate(${deg}deg)` : "";
@@ -647,12 +629,10 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		}, 160);
 		timers.later(() => {
 			clearInterval(spin);
-			// brief stunned beat, then he shakes it off
 			timers.later(backToFront, 350);
 		}, 1900);
 	}, [backToFront, setWormLean, timers]);
 
-	// Idle life while popped: attend toward the page centre, then doze.
 	useEffect(() => {
 		if (mode !== "popped") return;
 		const nap = timers.later(() => {
@@ -671,7 +651,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 				setFrame("front");
 				return;
 			}
-			// lean toward the middle of the screen from wherever he's parked
 			const { w } = wormSize();
 			const centreX = posRef.current.x + w / 2;
 			setFrame(centreX < window.innerWidth / 2 ? "leanR" : "leanL");
@@ -716,8 +695,8 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		};
 	}, [mode, backToFront, doBoing]);
 
-	// ── Section-following: he walks over to the section you settled on,
-	// and says whatever that section is tagged with (data-bagworm-line) ──
+	// Walks over to the section you settled on, and says what that section is tagged with
+	// (data-bagworm-line).
 	const CONTEXT_LINE_MS = 6000;
 
 	const speakAt = useCallback(
@@ -766,7 +745,7 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 			// A section's line is about what is in front of you, so it waits
 			// until the heading is actually on screen. On first load the
 			// first section is still below the tank, and "click the tabs"
-			// with no tabs in sight is just noise.
+			// with no tabs in sight is noise.
 			const r = heading?.getBoundingClientRect();
 			const visible = !!r && r.top >= 0 && r.bottom <= window.innerHeight;
 			speakAt(heading, visible ? section?.dataset.bagwormLine : undefined);
@@ -814,7 +793,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 
 	useEffect(() => {
 		if (reduced) return;
-		// He only moves once scrolling has settled. Mid-scroll he stays put.
 		lastActiveRef.current = activeSection().index;
 		let idle: number | undefined;
 		const onSettled = () => {
@@ -862,8 +840,7 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		// sceneKey is the only intended trigger.
 	}, [sceneKey, reduced, activeSection, moveToSection]);
 
-	// ── Quips: other components can summon him to say something specific
-	// (e.g. a hovered project card on the Visitor tour) via bagwormQuip() ──
+	// Other components summon him with bagwormQuip(), e.g. a hovered project card.
 	useEffect(() => {
 		if (reduced) return;
 		const onQuip = (e: Event) => {
@@ -876,9 +853,8 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		return () => window.removeEventListener(QUIP_EVENT, onQuip);
 	}, [reduced, speakAt]);
 
-	// ── Tilt: the phone's own "which way are you pointing" ──
-	// Granted (or not) back at the gate. He leans with the device, and a good
-	// shake makes him as dizzy as being flung across the screen does.
+	// Granted or refused at the gate. He leans with the device, and a good shake makes him
+	// as dizzy as being flung does.
 	const tiltActive = useRef(false);
 	const tiltFrame = useRef<Frame | null>(null);
 
@@ -949,7 +925,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		};
 	}, [reduced, coarse, tiltOn, goDizzy]);
 
-	// ── Poke: a wave, nothing more ──
 	const poke = useCallback(() => {
 		if (modeRef.current === "dizzy") return;
 		clearPendingSpeech();
@@ -964,7 +939,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		}, 1600);
 	}, [backToFront, clearPendingSpeech, doBoing, setWormLean, timers]);
 
-	// ── Drag: pick him up, drop him anywhere → he lands and gets dizzy ──
 	const suppressClick = useRef(false);
 	const draggingRef = useRef(false);
 	const dragRef = useRef<{
@@ -978,7 +952,7 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 	} | null>(null);
 	const endDragListeners = useRef<(() => void) | null>(null);
 
-	// Let go → a short gravity drop with a tiny bounce, then he goes dizzy.
+	// Let go: a short gravity drop with a tiny bounce, then he goes dizzy.
 	const dropAndDizzy = useCallback(() => {
 		settling.current = true;
 		setWormLean(0);
@@ -994,11 +968,11 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		const step = (now: number) => {
 			const dt = Math.min((now - last) / 1000, 0.03);
 			last = now;
-			vel += 2600 * dt; // gravity
+			vel += 2600 * dt;
 			y += vel * dt;
 			if (y >= floor) {
 				y = floor;
-				vel = -vel * 0.32; // bounce
+				vel = -vel * 0.32;
 				if (Math.abs(vel) < 70) {
 					posRef.current = { x: posRef.current.x, y: floor };
 					applyPos(false);
@@ -1044,7 +1018,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 				if (Math.hypot(ev.clientX - d.startX, ev.clientY - d.startY) > 4) {
 					d.moved = true;
 				}
-				// flop + tip toward the direction he's being flung
 				if (delta < -DRAG_FLOP_AT) setFrame("flopL");
 				else if (delta > DRAG_FLOP_AT) setFrame("flopR");
 				else setFrame("front");
@@ -1057,7 +1030,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 				const moved = d.moved;
 				cleanup();
 				if (!moved) {
-					// a poke, not a drag → he waves
 					poke();
 					return;
 				}
@@ -1135,7 +1107,6 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 			<button
 				type="button"
 				aria-label="Bagworm, the lab mascot. Poke him and he waves."
-				title="he lives here"
 				onClick={() => {
 					if (suppressClick.current) {
 						suppressClick.current = false;

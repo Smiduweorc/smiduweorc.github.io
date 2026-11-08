@@ -1,18 +1,7 @@
-// Who came from whom, and who hands which job to whom.
-//
-// Every edge here is stated in a README: Dung beetle is "Aphid plus a
-// generator", RoveBeetle was scaffolded from Dung beetle, Antlion wraps a
-// Lacewing profile, Repletes and Mycocepurus send their retries to Firefly,
-// and so on. A relation nobody wrote down does not get drawn, however likely
-// it looks, because a diagram reads as a claim.
-//
-// The casts that have no logo of their own (drawn as a plain cocoon) share
-// one box rather than a node each: a row of identical cocoons says nothing,
-// and they are listed by name inside it instead.
-//
-// The nodes are HTML buttons laid over an SVG of the edges, both placed on
-// the same 1200 x 620 grid, so the labels stay real text at real sizes and
-// the drawings stay clickable.
+// Every edge must be stated in a README. A relation nobody wrote down is not
+// drawn, because a diagram reads as a claim.
+// Nodes are HTML buttons over an SVG of the edges, on one shared grid, so the
+// labels stay real text at real sizes.
 
 import { Plate } from "./vivarium/artwork";
 import { SPECIMENS, byId, type Specimen } from "./specimens";
@@ -55,16 +44,11 @@ const EDGES: Edge[] = [
 	{ from: "aphid-template", to: "firefly", kind: "hands", label: "its transport" },
 ];
 
-// How far an edge stops short of a node's centre, so arrowheads land
-// outside the drawing instead of on it.
+// Edges stop this far short of a node's centre, so arrowheads clear the drawing.
 const NODE_CLEAR = 72;
-// How far an edge bows off the straight line. Two edges between the same
-// pair run in opposite directions, so they bow to opposite sides.
 const BOW = 26;
-// A pair with edges both ways (Firefly and Repletes) bows further, so the
-// two arrows and their labels have room between them, and each direction
-// leaves and arrives off to its own side of the centre line. Sharing the
-// same two end points, one arrow's head sat right on the other's tail.
+// Edges both ways between one pair bow further, so one arrowhead does not land
+// on the other's tail.
 const LOOP_BOW = 40;
 const LOOP_SPLIT = 16;
 // The name sits under the drawing, so an edge leaving downwards or arriving
@@ -88,12 +72,9 @@ function geometry(e: Edge) {
 	const sy = a.y + uy * leave + ux * split;
 	const ex = b.x - ux * arrive - uy * split;
 	const ey = b.y - uy * arrive + ux * split;
-	// Control point off the midpoint, perpendicular to the line.
 	const bow = hasReverse(e) ? LOOP_BOW : BOW;
 	const cx = (sx + ex) / 2 - uy * bow * 2;
 	const cy = (sy + ey) / 2 + ux * bow * 2;
-	// A quadratic's midpoint is halfway between the chord midpoint and the
-	// control point.
 	const mx = ((sx + ex) / 2 + cx) / 2;
 	const my = ((sy + ey) / 2 + cy) / 2;
 	return { d: `M${sx} ${sy} Q${cx} ${cy} ${ex} ${ey}`, mx, my };
@@ -102,8 +83,7 @@ function geometry(e: Edge) {
 export function FoodWeb({ onOpen }: { onOpen: (s: Specimen) => void }) {
 	return (
 		<>
-			{/* The same facts as sentences, for screen readers: the drawing
-			    itself is a picture of them. */}
+			{/* The same facts as sentences, for screen readers. */}
 			<ul className="sr-only">
 				{EDGES.map((e) => (
 					<li key={e.from + e.to} className="text-theme-text-secondary">
@@ -118,11 +98,9 @@ export function FoodWeb({ onOpen }: { onOpen: (s: Specimen) => void }) {
 				))}
 			</ul>
 
-			{/* On a phone the web keeps its full width and scrolls sideways
-			    inside its own frame, rather than being squeezed to a tangle
-			    or folded into a list. Only this frame scrolls, never the page. */}
+			{/* Phones scroll the web inside its own frame, never the page. */}
 			<p className="font-hand mb-2 text-sm text-theme-comment md:hidden">
-				swipe sideways to see the whole web →
+				swipe sideways to see the whole web
 			</p>
 			<div className="-mx-2 overflow-x-auto px-2 pb-3">
 				<div
@@ -179,10 +157,7 @@ export function FoodWeb({ onOpen }: { onOpen: (s: Specimen) => void }) {
 						);
 					})}
 
-					{/* The cocoon casts, boxed off as one, each still openable. Its
-					    height is a minimum and it is pinned by its centre: at the
-					    narrow phone width the names wrap to more rows than the
-					    box holds, so it grows both ways instead of spilling. */}
+					{/* Pinned by centre: at phone width the names wrap, so the box grows both ways. */}
 					<div
 						className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-sm border-2 border-dashed border-theme-border bg-theme-panel px-3 py-2 md:gap-2 md:px-4"
 						style={{

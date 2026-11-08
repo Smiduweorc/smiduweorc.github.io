@@ -1,6 +1,5 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-// The four typographic jobs: display / body / catalogue mono / hand.
 import "@fontsource-variable/fraunces/index.css"
 import "@fontsource/ibm-plex-sans/400.css"
 import "@fontsource/ibm-plex-sans/500.css"

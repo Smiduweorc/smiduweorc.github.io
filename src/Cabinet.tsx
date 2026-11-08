@@ -1,14 +1,3 @@
-// The collection, read one of two ways.
-//
-// As a field guide it is a page of the journal with photos taped in: each
-// animal on a polaroid, its name written on the bottom in pen, the details
-// typed underneath and the collector's note beside them. The animals in the
-// photos turn to face the pointer, and the one under it stops in the tank
-// and lights up, so the page and the glass are looking at the same thing.
-// Tabs pick which page you are on, starting with the popular ones, so a
-// first visit meets six animals rather than all of them. As a spec sheet it
-// is one table of everything, because a table is what that reader came for.
-
 import { useEffect, useRef, useState } from "react";
 import { Plate } from "./vivarium/artwork";
 import { InkUnderline } from "./Ink";
@@ -24,7 +13,6 @@ import {
 
 type Page = Kind | "popular";
 
-// The tabs carry notes too, so the lens finds something on the tab row.
 const PAGE_NOTE: Record<Page, string> = {
 	popular: "the ones people ask about. not a ranking.",
 	library: "you import these. they run inside your process.",
@@ -33,12 +21,10 @@ const PAGE_NOTE: Record<Page, string> = {
 	colony: "you run this one. other people are the ones using it.",
 };
 
-// Photos are taped in by hand, so no two sit quite straight. Fixed per slot
-// rather than random, so the page looks the same on every visit.
+// Fixed per slot, not random, so every visit looks the same.
 const PHOTO_TILT = [-1.6, 1.1, -0.6, 1.4, -1.2, 0.7];
 
-// The tape is torn off the roll by hand too: each slot gets its own strips,
-// some photos only one. [side, width in rem, angle in degrees]
+// [side, width in rem, angle in degrees]
 type Strip = ["left" | "right", number, number];
 const TAPE: Strip[][] = [
 	[["left", 4, -24], ["right", 3.5, 18]],
@@ -49,10 +35,8 @@ const TAPE: Strip[][] = [
 	[["right", 3.5, 22]],
 ];
 
-// Which way each side-on drawing faces as drawn. Turning to face the pointer
-// is a mirror, so it needs to know where the head already is. The drawings
-// seen from above (Termite, Antlion, Darter) and the ones whose head is not
-// obvious are left alone rather than guessed at.
+// Which way each side-on drawing faces. Top-down drawings and unclear heads
+// are not listed, so they are not turned.
 const FACES: Partial<Record<string, "left" | "right">> = {
 	lacewing: "right",
 	cephalote: "right",
@@ -83,8 +67,7 @@ export function Cabinet({
 	const [page, setPage] = useState<Page>("popular");
 	const wallRef = useRef<HTMLUListElement>(null);
 
-	// Every photo's animal turns to face the pointer: one listener for the
-	// page, one read of the layout per frame at most.
+	// One listener, and at most one layout read per frame.
 	useEffect(() => {
 		let raf = 0;
 		let x = 0;
@@ -143,9 +126,7 @@ export function Cabinet({
 							<span className="font-mono text-xs text-theme-comment">
 								{onPage(p).length}
 							</span>
-							{/* Laid under the label rather than in the flow: the
-							    underline's own width is sized for headings, and in
-							    the flow it would stretch the tab to match. */}
+							{/* Under the label, not in the flow: in the flow it stretches the tab. */}
 							<span
 								aria-hidden="true"
 								className={
@@ -176,8 +157,6 @@ export function Cabinet({
 				{onPage(page).map((s, i) => (
 					<li
 						key={s.id}
-						// The middle column sits lower, so the page reads as taped
-						// in by hand rather than printed on a grid.
 						className={i % 3 === 1 ? "lg:translate-y-8" : ""}
 					>
 						<Polaroid
@@ -220,10 +199,7 @@ function Polaroid({
 			data-note={specimen.note}
 			className="group block w-full text-left focus:outline-none"
 		>
-			{/* The photo: an off-white border, a strip or two of tape at
-			    the top. It straightens when you look closely. The frame is
-			    the page's text colour rather than its brightest, so the
-			    photos never outshine the name above them. */}
+			{/* Framed in the text colour, not the brightest, so photos never outshine their names. */}
 			<span
 				className="relative block bg-theme-text p-2.5 pb-1 shadow-[3px_5px_0_rgb(0_0_0_/_0.35)] transition-[rotate] duration-300 group-hover:!rotate-0 group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-4 group-focus-visible:outline-theme-accent"
 				style={{ rotate: `${tilt}deg` }}
@@ -254,7 +230,6 @@ function Polaroid({
 						</span>
 					</span>
 				</span>
-				{/* the name, in pen, on the white strip at the bottom */}
 				<span className="font-hand block truncate px-1 pb-1 pt-1.5 text-sm text-theme-bg sm:text-lg">
 					{specimen.name}
 				</span>
@@ -265,7 +240,7 @@ function Polaroid({
 					{specimen.binomial}
 					<NpmCount
 						specimen={specimen}
-						className="block not-italic sm:inline sm:before:content-['_·_']"
+						className="block not-italic sm:inline sm:before:content-['_/_']"
 					/>
 				</span>
 				<span className="stamp shrink-0">{specimen.taxonomy.stage}</span>

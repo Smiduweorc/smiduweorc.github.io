@@ -24,11 +24,9 @@ import { type Reading, type Specimen } from "./specimens";
 
 const ORG_URL = "https://github.com/Smiduweorc";
 
-// Casper's gutter: a share of the smaller viewport side, never under 20px,
-// so the page breathes on a monitor and still fits a phone. From tablet up
-// the right side is wider: that is the rail the lens, the lighting and
-// Baggie stand in, so they never sit on top of the page. From desktop up
-// it is wide enough for his speech bubble as well.
+// The right gutter is wider from tablet up: the rail the lens, the lighting
+// and Baggie stand in, so they never sit on the page. Desktop also fits his
+// speech bubble.
 const GUTTER = "px-[max(4vmin,20px)] md:pr-24 lg:pr-44";
 
 // Type has one job per face, everywhere on the page:
@@ -37,7 +35,6 @@ const GUTTER = "px-[max(4vmin,20px)] md:pr-24 lg:pr-44";
 //   hand (Shantell)     anything written by hand: notes, labels on photos
 //   mono (Plex Mono)    catalogue data: plate numbers, stamps, download counts
 
-/** The wall label under the tank, as it has always read. */
 function Plaque() {
 	return (
 		<div className="grid gap-x-[6vw] gap-y-6 pb-[6vmin] pt-[5vmin] lg:grid-cols-[auto_1fr]">
@@ -67,9 +64,6 @@ function Plaque() {
 	);
 }
 
-/** One entry in the journal: the plate number and a pencil note in the
- *  margin, the heading and its content on the page. On a phone the margin
- *  folds up above the entry. */
 function Entry({
 	plate,
 	title,
@@ -86,8 +80,7 @@ function Entry({
 	aside?: ReactNode;
 	bagwormLine?: string;
 	note?: string;
-	/** Things pressed into the margin under the pencil note, spread down
-	 *  its whole height so a long entry's margin is never bare. */
+	/** Spread down the whole margin so a long entry's margin is never bare. */
 	keepsake?: ReactNode[];
 	children: ReactNode;
 }) {
@@ -130,9 +123,8 @@ function Entry({
 	);
 }
 
-/** The org profile's opinions, word for word. They sit two to a row, so
- *  they are ordered to pair items of about the same length: a short one
- *  beside a long one leaves a hole in the page. */
+/** The org profile's opinions, word for word. Ordered so each row pairs
+ *  items of similar length. */
 const OPINIONS = [
 	"Solve one problem (or type of problem) well.",
 	"Keep dependencies to a minimum.",
@@ -148,10 +140,7 @@ const OPINIONS = [
 	"Our libraries are generally insects.",
 ];
 
-/** A numbered list written straight onto the ruled page, so any one can
- *  be pointed at ("number eleven, though") and argued with. Lines are 2rem
- *  tall to sit on the journal's 32px ruling from desktop up (a phone gets
- *  them tighter), and each item is only as big as what it says. */
+/** Lines are sized to sit on the journal's 32px ruling from desktop up. */
 function Opinions() {
 	return (
 		<ol className="grid gap-x-16 lg:grid-cols-2">
@@ -226,8 +215,7 @@ function App() {
 	const [gateOpen, setGateOpen] = useState(() => !hasBeenGreeted());
 	const [theme, setTheme] = useState<Theme>(() => initializeTheme());
 	const [reading, setReading] = useState<Reading>("guide");
-	// The photo the pointer is on, so its animal in the tank can stop and
-	// light up: the page and the glass are looking at the same thing.
+	// The photo under the pointer, so its animal in the tank can light up.
 	const [spotlight, setSpotlight] = useState<string | null>(null);
 	const coarse = useCoarsePointer();
 
@@ -235,7 +223,6 @@ function App() {
 		setOpen(s);
 	}, []);
 
-	// Bagworm reacts to whichever card you opened, if that one has a line.
 	useEffect(() => {
 		if (!open?.quip) return;
 		const heading = document.getElementById("specimen-card-title");
@@ -263,7 +250,6 @@ function App() {
 			<div className={GUTTER}>
 				<Plaque />
 
-				{/* The journal: one long ruled page with a margin line. */}
 				<main id="journal" tabIndex={-1} className="journal-page relative outline-none rounded-sm bg-theme-panel px-[max(3vmin,16px)] shadow-[3px_5px_0_rgb(0_0_0_/_0.3)] [--margin:9rem] lg:[--margin:12rem]">
 					<StrayAnt />
 					<Entry
@@ -315,7 +301,6 @@ function App() {
 						]}
 					>
 						<div className="relative">
-							{/* someone put their mug down on the opinions */}
 							<CoffeeRing className="absolute -bottom-6 left-[38%] hidden w-36 rotate-12 lg:block" />
 							<Opinions />
 						</div>
@@ -356,7 +341,6 @@ function App() {
 								</a>
 							))}
 						</span>
-						{/* the stray ant came through here at some point */}
 						<AntTracks className="mt-10 w-64 max-w-full -rotate-2" />
 					</Entry>
 				</main>
@@ -368,7 +352,7 @@ function App() {
 					<div>
 						<InkSquiggle className="mb-3 text-theme-border" />
 						<p className="font-mono text-xs text-theme-comment">
-							smiduweorc · <span className="italic">smiþ-weorc</span>, OE.
+							smiduweorc / <span className="italic">smiþ-weorc</span>, OE.
 							smith-work.
 						</p>
 					</div>
@@ -391,11 +375,8 @@ function App() {
 			/>
 			<Lens active={lensOn && !coarse} onDismiss={() => setLensOn(false)} />
 
-			{/* Tools, bottom-right, in the order you reach for them. */}
 			<div className="lens-exempt fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
-				{/* The lens follows a pointer. With only a finger there is
-				    nothing for it to follow, and the notes it would show are
-				    already written on the page. */}
+				{/* No pointer on touch, so nothing for the lens to follow. */}
 				{!coarse && (
 					<MagnifierToggle on={lensOn} onToggle={() => setLensOn((v) => !v)} />
 				)}

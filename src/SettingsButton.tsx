@@ -79,9 +79,6 @@ export function SettingsButton({ currentTheme, onThemeChange }: SettingsButtonPr
 						<h3 className="font-display mb-1 text-lg text-theme-text-primary">
 							Vivarium lighting
 						</h3>
-						<p className="mb-3 text-xs leading-snug text-theme-comment">
-							Pick whichever is kindest to your eyes.
-						</p>
 						<div className="max-h-[calc(70vh-7rem)] space-y-2 overflow-y-auto pr-1">
 							{themes.map((theme) => (
 								<button

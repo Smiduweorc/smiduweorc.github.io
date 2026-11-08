@@ -1,6 +1,4 @@
-// Whether Bagworm has already done the door greeting for this visitor.
-// Once per browser, not once per page load. Being greeted by name every
-// single visit stops being charming somewhere around the third time.
+// Whether Bagworm has greeted this visitor. Once per browser, not per page load.
 
 const GREETED_KEY = "smiduweorc-greeted";
 
@@ -20,6 +18,6 @@ export function markGreeted(): void {
 	try {
 		localStorage.setItem(GREETED_KEY, "1");
 	} catch {
-		// nothing to do; the gate simply reappears next visit
+		// nothing to do; the gate reappears next visit
 	}
 }

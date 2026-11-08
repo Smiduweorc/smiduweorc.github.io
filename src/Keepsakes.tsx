@@ -1,10 +1,5 @@
-// Things pressed into the journal between its pages: a leaf taped into the
-// margin, a mug set down on the opinions, a feather, the stray ant's tracks.
-// Drawn in the same single pen line as the ink accents, in faded colours,
-// so they read as the keeper's clutter rather than as decoration competing
-// with the entries. All aria-hidden: there is nothing in them to read.
+// Pressed into the journal's margins. All aria-hidden: nothing in them to read.
 
-/** A small strip of tape, to hold a keepsake in. */
 function Tape({ className = "" }: { className?: string }) {
 	return (
 		<span
@@ -14,7 +9,6 @@ function Tape({ className = "" }: { className?: string }) {
 	);
 }
 
-/** A pressed leaf, taped into the margin at the stalk. */
 export function PressedLeaf({ className = "" }: { className?: string }) {
 	return (
 		<div aria-hidden="true" className={"relative w-28 rotate-[14deg] " + className}>
@@ -44,7 +38,6 @@ export function PressedLeaf({ className = "" }: { className?: string }) {
 	);
 }
 
-/** Where a mug was set down on the page. Never quite a closed circle. */
 export function CoffeeRing({ className = "" }: { className?: string }) {
 	return (
 		<svg
@@ -71,7 +64,6 @@ export function CoffeeRing({ className = "" }: { className?: string }) {
 	);
 }
 
-/** A fern frond, pressed flat. */
 export function Frond({ className = "" }: { className?: string }) {
 	const pairs = [0, 1, 2, 3, 4, 5, 6];
 	return (
@@ -94,7 +86,6 @@ export function Frond({ className = "" }: { className?: string }) {
 	);
 }
 
-/** A feather, tucked into the margin. */
 export function Feather({ className = "" }: { className?: string }) {
 	return (
 		<svg
@@ -119,7 +110,6 @@ export function Feather({ className = "" }: { className?: string }) {
 	);
 }
 
-/** Where the stray ant walked through something and kept going. */
 export function AntTracks({ className = "" }: { className?: string }) {
 	const steps = Array.from({ length: 14 }, (_, i) => i);
 	return (
@@ -143,7 +133,6 @@ export function AntTracks({ className = "" }: { className?: string }) {
 	);
 }
 
-/** A thumbprint of soil from the tank, and the crumbs that came with it. */
 export function Dirt({ className = "" }: { className?: string }) {
 	const crumbs: [number, number, number][] = [
 		[18, 40, 2.2], [26, 52, 1.4], [70, 30, 1.8], [84, 46, 1.2], [60, 70, 2.4],
@@ -160,7 +149,6 @@ export function Dirt({ className = "" }: { className?: string }) {
 				d="M34 30 C 48 18, 74 20, 84 34 C 94 48, 86 66, 66 70 C 48 74, 30 66, 26 52 C 23 42, 27 36, 34 30 Z"
 				opacity="0.12"
 			/>
-			{/* the ridges of the thumb that left it */}
 			{[0, 1, 2, 3].map((i) => (
 				<path
 					key={i}
@@ -178,7 +166,6 @@ export function Dirt({ className = "" }: { className?: string }) {
 	);
 }
 
-/** A strip of tape whose keepsake has fallen out. */
 export function TapeScrap({ className = "", angle = -12 }: { className?: string; angle?: number }) {
 	return (
 		<span
@@ -193,7 +180,6 @@ export function TapeScrap({ className = "", angle = -12 }: { className?: string;
 	);
 }
 
-/** A long, thin leaf, a grass blade or a willow's, pressed and taped. */
 export function LongLeaf({ className = "" }: { className?: string }) {
 	return (
 		<div aria-hidden="true" className={"relative w-14 -rotate-[28deg] " + className}>

@@ -1,10 +1,7 @@
-// The collection. One entry per repository in the Smiduweorc org, written up
-// the way a field guide writes up an animal.
-//
-// Everything here is real. Descriptions and numbers come from the repos. The
-// taxonomy is the joke: `order` is the language, `habitat` is where the thing
-// runs, `diet` is what it eats. `stage` is the one field a visitor actually
-// needs, so it stays honest and short.
+// One entry per repository in the Smiduweorc org, written up like a field guide.
+// Descriptions and numbers come from the repos. The taxonomy is the joke: order is the
+// language, habitat is where it runs, diet is what it eats. Stage is the one field a
+// visitor needs, so it stays honest and short.
 
 import type { ArtworkKey } from "./vivarium/artwork";
 

@@ -1,17 +1,11 @@
-// Weekly npm downloads for the libraries that are on npm.
-//
-// Fetched in the browser, once per page load, in a single bulk request to
-// npm's public downloads API (it allows any origin). The package name comes
-// from each specimen's own npm link, so a new library only needs that link.
-// If the request fails, nothing is shown: a missing count is better than a
-// made-up one.
+// Weekly npm downloads, fetched once per page load in one bulk request.
+// A failed request shows nothing: a missing count beats a made-up one.
 
 import { useEffect, useState } from "react";
 import { SPECIMENS, type Specimen } from "./specimens";
 
 const NPM_PACKAGE = /^https:\/\/www\.npmjs\.com\/package\/(.+)$/;
 
-/** The npm package name for a specimen, from its npm link, if it has one. */
 export function npmPackage(s: Specimen): string | null {
 	for (const l of s.links) {
 		const m = NPM_PACKAGE.exec(l.href);
@@ -42,7 +36,6 @@ function fetchCounts(): Promise<Counts> {
 	return request;
 }
 
-/** Last week's downloads for this specimen, or null if it has none (yet). */
 export function useWeeklyDownloads(s: Specimen | null): number | null {
 	const [counts, setCounts] = useState<Counts | null>(null);
 	useEffect(() => {

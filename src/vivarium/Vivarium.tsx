@@ -1,27 +1,13 @@
 // The vivarium: a glass tank with the flagship projects living in it.
+// Side-on drawings can only be mirrored, never turned round: turned far, one reads as an
+// insect on its back. So those walk the floor. Antlion, Darter and Termite are drawn from
+// above, so they climb the glass. Firefly flies.
 //
-// The drawings come in two views, and the view decides how an animal may
-// move. Most are side-on, and a side view can only be mirrored, never turned
-// round: rotate one far and it reads as an insect dead on its back. Those
-// walk the floor. Antlion, Darter and Termite are drawn from above, and a
-// view from above can face any way at all, so those three climb the glass,
-// mostly up and down because that is the way they are drawn. Firefly flies.
+// Speeds come from the animals, and they move in bursts: a tank of things gliding at a
+// constant speed reads as a screensaver.
 //
-// Sizes and speeds come from the animals, not from the layout. Each one is
-// drawn at its real body length, squashed by a square root so an aphid is
-// still something you can click next to a stick insect, and each moves at a
-// pace that suits it: ants hurry, the caterpillar and the stick insect take
-// their time. Nothing moves continuously. Real insects go in bursts, stop,
-// think, and set off again, and a tank of things gliding at constant speed
-// reads as a screensaver.
-//
-// The dung beetle has a job. It rolls a ball of dung that grows as it goes,
-// parks it in the cave at the right-hand wall, and wanders off for another.
-//
-// One requestAnimationFrame loop writes transforms straight onto the DOM
-// nodes. Per-frame React state for a handful of critters would re-render the
-// section sixty times a second to move some pixels the browser can move on
-// its own.
+// One requestAnimationFrame loop writes transforms straight onto the DOM nodes. Per-frame
+// React state would re-render the section sixty times a second to move some pixels.
 
 import {
 	useCallback,
@@ -39,10 +25,7 @@ import {
 import { Boll, CaveInside, CaveRock, Scenery } from "./Scenery";
 import { tankSpecimens, type Specimen } from "../specimens";
 
-// ── Tuning ──────────────────────────────────────────────────────────
-// Body length in mm to drawn px, at scale 1 in a 1200px tank: 16 x sqrt(mm).
-// A straight line would make the stick insect fifty aphids long, which is
-// true and leaves the aphid as a dot.
+// Square root, not a straight line: a straight line leaves the aphid as a dot.
 const PX_PER_SQRT_MM = 16;
 const MIN_PX = 30; // below this the linework stops reading as legs
 const FLEE_RADIUS = 130; // px: pointer closer than this and it bolts
@@ -71,10 +54,8 @@ const BACK_WALL = 0.95;
 // read as "behind": it reads as one illegible tangle of strokes.
 const PERSONAL_SPACE = 0.6;
 
-// The beetle's half of the dung beetle drawing: the ball in the drawing
-// starts at 33% of its width, measured off the mask. The site draws its own
-// ball so that one can grow: every trip starts from a pellet and ends a
-// little over two beetle lengths across, which is what the real ones manage.
+// The site draws its own ball so it can grow: each trip starts from a pellet and ends
+// a little over two beetle lengths across.
 const BEETLE_CUT = 0.33;
 const BOLL_START = 0.08; // diameter as a fraction of the drawing's height
 const BOLL_MAX = 0.8;
@@ -252,7 +233,6 @@ export function Vivarium({
 	spotlight,
 }: {
 	onOpen: (s: Specimen) => void;
-	/** An animal being looked at on the page: it stops and lights up. */
 	spotlight: string | null;
 }) {
 	const reduced = usePrefersReducedMotion();
@@ -330,7 +310,6 @@ export function Vivarium({
 				width,
 				height,
 				flip: artworkHangs(s.art) ? -1 : 1,
-				// Walkers start behind the beetle's lane, wherever their line is.
 				depth:
 					habit.mode === "walk"
 						? clamp(TANK_DEPTH[s.id] ?? 0.5, BEETLE_LANE, BACK_WALL)
@@ -358,7 +337,6 @@ export function Vivarium({
 	const beetle = () =>
 		crittersRef.current.find((c) => c.habit.mode === "roll") ?? null;
 
-	/** The left edge of the cave mouth's floor, in tank px. */
 	const caveMouthX = useCallback(() => {
 		const { w, size } = boundsRef.current;
 		return w - CAVE_W * size * 0.78;
@@ -371,7 +349,6 @@ export function Vivarium({
 		const e = errandRef.current;
 		const { size } = boundsRef.current;
 		const scale = (1 - b.depth * 0.32) * size;
-		// Dropped: it lies where it was left until the beetle is back.
 		if (e.phase === "fleeing" || e.phase === "returning") {
 			const { x, y, d } = e.ballAt;
 			el.style.transform = `translate3d(${x - d / 2}px, ${y - d}px, 0) rotate(${e.spin}rad)`;
@@ -383,12 +360,9 @@ export function Vivarium({
 		}
 		el.style.opacity = String(e.ballSeen);
 		const d = e.boll * scale;
-		// The ball sits against the beetle's hind legs. In the drawing they
-		// are at the box's right edge, halfway up, but the beetle tilts about
-		// its head (the box's bottom-left corner), and level it swings its back
-		// end well past that edge. So the legs are found by turning that point
-		// through the same tilt. The legs reach a little way round the ball,
-		// so the two overlap slightly.
+		// The legs are not at the box edge: the beetle tilts about its head, so the hind legs
+		// are found by turning that point through the same tilt. The legs reach a little way
+		// round the ball, so the two overlap slightly.
 		const t = (e.tilt * Math.PI) / 180;
 		const bw = b.width * scale;
 		const legUp = b.height * scale * HIND_LEG_HEIGHT;
@@ -403,8 +377,7 @@ export function Vivarium({
 	const draw = useCallback((c: Critter) => {
 		if (!c.el) return;
 		const { size } = boundsRef.current;
-		// Further away is drawn smaller. Scale, flip, bounce and tilt all
-		// ride on the one transform so the browser composites once.
+		// One transform for scale, flip, bounce and tilt, so the browser composites once.
 		const scale = (1 - c.depth * 0.32) * size;
 		const bounce = Math.abs(Math.sin(c.gait)) * BOUNCE_PX;
 		const rock = Math.sin(c.gait * 0.5) * ROCK_DEG;
@@ -446,7 +419,6 @@ export function Vivarium({
 			// its head, at the box's bottom-left corner.
 			const { tilt, seen } = errandRef.current;
 			c.el.style.opacity = String(seen);
-			// Lost in the dark is not clickable either.
 			c.el.style.visibility = seen > 0 ? "visible" : "hidden";
 			c.el.style.transformOrigin = "left bottom";
 			// Tipping about its head swings the back legs down through the
@@ -459,21 +431,15 @@ export function Vivarium({
 			return;
 		}
 
-		// A drawing of a hanging animal is mirrored vertically to stand it up.
-		// The transform origin is the bottom edge, so a bare negative y-scale
-		// would reflect the whole box straight down through the floor. Moving
-		// the box down by its own height first, in its own unscaled
-		// coordinates, lands it back where it started with the drawing the
-		// other way up. The horizontal flip for walking left still composes
-		// with it: two mirrors, not a rotation, so it never reads as an
-		// insect on its back.
+		// Mirror a hanging drawing vertically to stand it up. The origin is the bottom edge, so
+		// the box first moves down by its own height, or it reflects through the floor.
+		// A horizontal flip still composes with it: two mirrors, not a rotation.
 		const stand = c.flip === -1 ? ` translateY(${c.height}px)` : "";
 		c.el.style.transform =
 			`translate3d(${c.x - c.width / 2}px, ${c.y - c.height - bounce}px, 0) ` +
 			`rotate(${rock * c.flip * c.dir}deg) ` +
 			`scale(${scale * c.dir}, ${scale * c.flip})` +
 			stand;
-		// Nearer the glass is drawn over further back.
 		c.el.style.zIndex = String(10 + Math.round(c.y));
 	}, []);
 
@@ -518,7 +484,6 @@ export function Vivarium({
 				else c.y = clamp(c.y, pad, r.height - pad);
 			});
 
-			// The cave stands on the dung beetle's floor line at the right wall.
 			const b = beetle();
 			const caveTop = (b ? b.y : r.height - WALL_PAD) - CAVE_H * size;
 			for (const node of [caveInsideRef.current, caveRockRef.current]) {
@@ -548,7 +513,7 @@ export function Vivarium({
 	}, [layout]);
 
 	useEffect(() => {
-		if (reduced) return; // everyone stays where layout() put them
+		if (reduced) return;
 		let raf = 0;
 		let last = performance.now();
 
@@ -572,7 +537,6 @@ export function Vivarium({
 					if (scattering) {
 						c.flee = 1;
 					} else if (pointer) {
-						// Where the body is on screen, for the pointer test.
 						const bodyY = mode === "walk" ? c.y - (c.height * scale) / 2 : c.y;
 						const dx = c.x - pointer.x;
 						const dy = bodyY - pointer.y;
@@ -681,7 +645,6 @@ export function Vivarium({
 				} else if (mode === "climb" || mode === "fly") {
 					c.x += vx * travelled;
 					c.y += vy * travelled;
-					// The firefly keeps to the air; climbers use the whole glass.
 					const top = mode === "fly" ? padY + h * 0.05 : padY;
 					const bottom = mode === "fly" ? h - band - padY : h - padY;
 					if (c.x <= padX || c.x >= w - padX) {
@@ -709,7 +672,6 @@ export function Vivarium({
 				const a = list[i];
 				for (let j = i + 1; j < list.length; j++) {
 					const b = list[j];
-					// Floor and air do not meet.
 					if ((a.habit.mode === "fly") !== (b.habit.mode === "fly")) continue;
 					const dx = b.x - a.x;
 					const dy = b.y - a.y;
@@ -759,13 +721,11 @@ export function Vivarium({
 			const outside = (x: number) => clamp(1 - (x - mouth) / dark, 0, 1);
 
 			if (e.phase === "rolling") {
-				// Heavier going as the ball grows, which is the whole joke.
 				const effort = 1 - (e.boll / c.height - BOLL_START) * 0.8;
 				const step = travelled * effort;
 				c.heading = c.target = 0;
 				c.x += step;
 				e.boll = Math.min(c.height * BOLL_MAX, e.boll + step * e.growth);
-				// Rolling without slipping: the ball turns by distance over radius.
 				e.spin += step / Math.max(1, (e.boll * scale) / 2);
 				const up = clamp(
 					(e.boll / c.height - BOLL_START) / (BOLL_HEADSTAND - BOLL_START),
@@ -780,7 +740,6 @@ export function Vivarium({
 					e.phase = "inside";
 					e.parked += 1;
 					setParked(e.parked);
-					// A while in the dark, putting it away.
 					c.restUntil = now + rand(2.5, 5) * 1000;
 					c.moveUntil = c.restUntil + 60_000;
 				}
@@ -803,7 +762,6 @@ export function Vivarium({
 					c.x += Math.sign(gap) * travelled;
 				}
 			} else if (e.phase === "inside") {
-				// The rest is over: out it comes, head first, nothing to push.
 				e.phase = "emerging";
 				e.tilt = BEETLE_LEVEL_DEG;
 				c.heading = c.target = Math.PI;
@@ -813,7 +771,6 @@ export function Vivarium({
 				const home = Math.max(WALL_PAD + half, mouth - w * 0.5);
 				if (c.x <= home) {
 					startTrip(c);
-					// A moment to get the pellet together before setting off.
 					c.restUntil = now + rand(1, 2) * 1000;
 					c.moveUntil = c.restUntil + 60_000;
 				}

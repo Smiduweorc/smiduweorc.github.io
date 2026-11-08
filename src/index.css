@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-	/* Default lighting: the keeper's room after dark (see theme.ts for the
-	   rest of the shelf). These are only the fallbacks; theme.ts overwrites
-	   the same custom properties on :root at runtime. */
+	/* Fallbacks only: theme.ts overwrites these on :root at runtime. */
 	--color-theme-bg: #16150f;
 	--color-theme-panel: #26241c;
 	--color-theme-border: #3c382b;
@@ -30,7 +28,6 @@ html::-webkit-scrollbar {
 	display: none;
 }
 
-/* One focus ring for everything: 2px in the accent, clear of the edge. */
 :focus-visible {
 	outline: 2px solid var(--color-theme-accent);
 	outline-offset: 3px;
@@ -41,11 +38,7 @@ html::-webkit-scrollbar {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Stationery ──────────────────────────────────────────────────── */
 
-/* A rubber-stamp mark: mono, in faded ink, pressed on crooked. Not the
-   accent: that is kept for the few things that should stand out.
-   The uneven radii and the diagonal mask fake a worn stamp pad. */
 .stamp {
 	display: inline-block;
 	font-family: var(--font-mono);
@@ -84,18 +77,13 @@ html::-webkit-scrollbar {
 	}
 }
 
-/* ── The vivarium ────────────────────────────────────────────────── */
 
-/* Glass: a soft inner shadow all round so the tank reads as a box with
-   depth rather than a flat panel with a border. */
 .vivarium-glass {
 	box-shadow:
 		inset 0 2px 22px rgb(0 0 0 / 0.35),
 		inset 0 -12px 28px -12px rgb(0 0 0 / 0.4);
 }
 
-/* Tapping the glass. Short, small, and never repeated: the point is to
-   startle the bugs, not the reader. */
 @keyframes viv-shake {
 	0%, 100% { transform: translate3d(0, 0, 0); }
 	20% { transform: translate3d(-3px, 1px, 0); }
@@ -107,8 +95,7 @@ html::-webkit-scrollbar {
 	animation: viv-shake 0.42s ease-in-out;
 }
 
-/* Legs and wings. Two phases so the left and right sides of a bug are
-   never in lockstep, which is what makes a walk cycle read as walking. */
+/* Leg pairs offset by half a cycle (.bug-leg-b), so a walk reads as walking. */
 @keyframes bug-step {
 	0%, 100% { transform: rotate(-5deg); }
 	50% { transform: rotate(5deg); }
@@ -129,11 +116,8 @@ html::-webkit-scrollbar {
 	animation: bug-flutter 2.6s ease-in-out infinite;
 }
 
-/* ── The hand lens ───────────────────────────────────────────────── */
 
-/* The lens itself is a fixed-position circle; the "glass" is a backdrop
-   filter, so it genuinely brightens and warms whatever is beneath it
-   instead of pretending to with an overlay. */
+/* A backdrop filter, not an overlay, so it brightens whatever is beneath. */
 .lens-glass {
 	backdrop-filter: brightness(1.25) contrast(1.08) saturate(1.15);
 	background: radial-gradient(
@@ -159,11 +143,8 @@ body.lens-active .lens-exempt * {
 	cursor: pointer !important;
 }
 
-/* ── The journal ──────────────────────────────────────────────────── */
 
-/* Ruled paper: a faint rule every 32px. From tablet width up, a margin line
-   in faded ink runs down the page just right of the margin column, the
-   way an exercise book has one in red. */
+/* Ruled every 32px. From tablet width up, a margin line runs down the page. */
 .journal-page {
 	background-image: repeating-linear-gradient(
 		to bottom,
@@ -193,9 +174,7 @@ body.lens-active .lens-exempt * {
 	}
 }
 
-/* An ant that has got out of the tank and is crossing the journal along its
-   top edge. Most of the cycle it is off the page; it crosses, then is gone
-   for a while, so it reads as an event rather than a conveyor. */
+/* Crosses the top edge, then is gone for a while, so it reads as an event rather than a conveyor. */
 @keyframes stray-walk {
 	0% { transform: translateX(-3rem); opacity: 1; }
 	45% { transform: translateX(calc(100cqw + 3rem)); opacity: 1; }
@@ -213,10 +192,7 @@ body.lens-active .lens-exempt * {
 	animation: stray-step 0.3s ease-in-out infinite;
 }
 
-/* ── The gallery wall ────────────────────────────────────────────── */
 
-/* A framed specimen at rest still breathes: a slow sway inside its frame.
-   Hovering sets it walking on the spot, the same rock at a stride's pace. */
 @keyframes specimen-idle {
 	0%, 100% { transform: rotate(-1.4deg) translateY(0); }
 	50% { transform: rotate(1.4deg) translateY(-2px); }
@@ -230,9 +206,7 @@ body.lens-active .lens-exempt * {
 	animation-duration: 0.5s;
 }
 
-/* ── Bagworm ─────────────────────────────────────────────────────── */
 
-/* the closed can slides in from off-screen and settles with a wobble */
 @keyframes bw-slide-in {
 	0% { transform: translateX(-70vw) rotate(-8deg); }
 	62% { transform: translateX(4%) rotate(3deg); }
@@ -284,7 +258,6 @@ body.lens-active .lens-exempt * {
 .bw-zzz span:nth-child(2) { animation-delay: 0.5s; }
 .bw-zzz span:nth-child(3) { animation-delay: 1s; }
 
-/* ── Reduced motion ──────────────────────────────────────────────── */
 /* The vivarium's own loop is disabled in JS (Vivarium.tsx bails before
    requestAnimationFrame), so what is left here is the CSS decoration. */
 @media (prefers-reduced-motion: reduce) {

@@ -1,9 +1,3 @@
-// The field-guide card: one specimen, plated and labelled.
-//
-// Laid out like a museum label, with the plate on the left and the taxonomy
-// table on the right, rather than as the tidy centred modal every project
-// site uses.
-
 import { useEffect, useRef, useState } from "react";
 import { Plate } from "./vivarium/artwork";
 import {
@@ -29,15 +23,14 @@ function useNarrow(): boolean {
 	return narrow;
 }
 
-/** The description, folded to a preview on a phone until asked for. Cut at
- *  a word boundary, never mid-word. */
+/** Cut at a word boundary, never mid-word. */
 function Description({ text }: { text: string }) {
 	const narrow = useNarrow();
 	const [open, setOpen] = useState(false);
 	const foldable = narrow && text.length > PREVIEW_CHARS;
 	const shown =
 		foldable && !open
-			? text.slice(0, text.lastIndexOf(" ", PREVIEW_CHARS)).replace(/[\s,;:.]+$/, "") + "…"
+			? text.slice(0, text.lastIndexOf(" ", PREVIEW_CHARS)).replace(/[\s,;:.]+$/, "") + "..."
 			: text;
 	return (
 		<div className="mb-4">
@@ -103,10 +96,8 @@ export function SpecimenCard({
 	];
 
 	return (
-		// The scroll container is the backdrop, and the card is centred by a
-		// min-h-full flex wrapper inside it. Centring the card directly on the
-		// overflow container instead pins its top out of reach on a short
-		// window, and the first thing you cannot scroll to is the title.
+		// Centre inside a min-h-full wrapper, not on the scroll container: on a short
+		// window that pins the title out of reach.
 		<div
 			role="dialog"
 			aria-modal="true"
@@ -123,7 +114,6 @@ export function SpecimenCard({
 
 			<div className="flex min-h-full items-center justify-center p-4 sm:p-6">
 				<div className="relative z-10 w-full max-w-2xl -rotate-[0.4deg] rounded-sm border-2 border-theme-border bg-theme-panel shadow-2xl">
-					{/* the pin holding the card to the board */}
 					<span
 						aria-hidden="true"
 						className="absolute left-1/2 top-2.5 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-theme-comment shadow-[0_2px_4px_rgb(0_0_0_/_0.5)]"
@@ -157,7 +147,6 @@ export function SpecimenCard({
 					</div>
 
 					<div className="grid gap-5 px-5 py-5 sm:grid-cols-[9rem_1fr] sm:px-7 sm:py-6">
-						{/* the plate */}
 						<div className="flex flex-col items-center gap-2">
 							<div className="flex h-28 w-full items-center justify-center rounded-sm border border-theme-border bg-theme-bg/60 p-2 text-theme-text-secondary">
 								<Plate artwork={specimen.art} className="h-full w-full" />
@@ -176,11 +165,7 @@ export function SpecimenCard({
 								{rows.map(([label, value]) => (
 									<div
 										key={label}
-										// Row height must equal the rule pitch in
-										// .index-card-lines (28px) or the text drifts
-										// off the ruling a little more with each row,
-										// and the list has no top padding: the ruling
-										// starts at its top edge.
+										// Must match the 28px rule pitch in .index-card-lines, which starts at the list's top edge.
 										className="flex flex-col py-1.5 text-sm sm:flex-row sm:items-baseline sm:gap-3 sm:py-0 sm:leading-7"
 									>
 										<dt className="text-xs text-theme-comment sm:w-[7.5rem] sm:shrink-0 sm:text-sm sm:leading-7">
@@ -207,12 +192,11 @@ export function SpecimenCard({
 							</div>
 
 							<p className="font-mono text-xs leading-relaxed text-theme-comment">
-							tags: {specimen.tags.join(" · ")}
+							tags: {specimen.tags.join(", ")}
 							</p>
 						</div>
 					</div>
 
-					{/* the collector's note, in pencil along the bottom edge */}
 					{guide && (
 						<p className="font-hand border-t border-theme-border/60 px-5 py-3 text-sm text-theme-text-secondary sm:px-7">
 							<span className="text-theme-comment">note: </span>

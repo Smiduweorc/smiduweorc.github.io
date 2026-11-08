@@ -1,24 +1,8 @@
-// Specimen artwork.
-//
-// The org already draws its own animals: most repos ship a hand-drawn,
-// side-on line study in assets/logo.png or .jpeg, and those are the real
-// thing: correct anatomy, correct number of legs, drawn by someone who was
-// looking at the animal. This site uses them rather than inventing a second,
-// worse set.
-//
-// Most are white line art on a near-black field (Termite's is filled and drawn
-// from above rather than side-on; Firefly and Repletes are line art with one
-// part filled in; Mycocepurus has a single green eye; Antlion is drawn from
-// above too, wings spread), so they ship as alpha masks
-// (built by scripts/build-artwork.py) and get painted with
-// `background-color: currentColor`. That means one file per animal instead of
-// one per animal per theme, and the linework always sits at the right contrast
-// against whichever palette is on.
-//
-// The repos with no logo of their own get a plain SVG in the same
-// single-weight line style. They are deliberately legless things, a cocoon
-// and a grub, because a drawing that never claims to have six legs can never
-// be caught having drawn them wrong.
+// Specimen artwork. Most repos ship a hand-drawn side-on study at assets/logo.png
+// (or .jpeg). Those are white line art on near-black, so build-artwork.py turns them
+// into alpha masks painted with currentColor: one file per animal, not one per theme.
+// The repos with no logo get a plain SVG in the same line style. They are deliberately
+// legless (a cocoon and a grub), so they can never be caught drawing six legs wrong.
 
 export type Artwork =
 	| { kind: "mask"; src: string; ratio: number; scale: number; hangs?: boolean }
@@ -182,7 +166,7 @@ export const ARTWORK = {
 
 export type ArtworkKey = keyof typeof ARTWORK;
 
-/** Width ÷ height, so callers can reserve the right box before it loads. */
+/** Width / height, so callers can reserve the right box before it loads. */
 export const artworkRatio = (key: ArtworkKey): number => ARTWORK[key].ratio;
 
 /** Relative display size in the vivarium. Tuned by eye, per drawing: the
@@ -196,10 +180,9 @@ export const artworkScale = (key: ArtworkKey): number => ARTWORK[key].scale;
 export const artworkHangs = (key: ArtworkKey): boolean =>
 	"hangs" in ARTWORK[key] && ARTWORK[key].hangs === true;
 
-// ── The two drawn-here ones ─────────────────────────────────────────
+
 // Single stroke weight, no fills, to sit beside the real logos without
 // looking like they came from a different collection.
-
 function Cocoon({ className = "" }: { className?: string }) {
 	return (
 		<svg
@@ -212,16 +195,12 @@ function Cocoon({ className = "" }: { className?: string }) {
 			strokeLinejoin="round"
 			aria-hidden="true"
 		>
-			{/* the silk anchor it hangs from */}
 			<path d="M60 6 L60 16" />
 			<path d="M52 7 C 58 11, 62 11, 68 7" />
-			{/* the case */}
 			<path d="M60 16 C 84 22, 94 40, 88 56 C 83 68, 70 72, 60 72 C 50 72, 37 68, 32 56 C 26 40, 36 22, 60 16 Z" />
-			{/* segment ridges */}
 			<path d="M38 34 C 52 39, 68 39, 82 34" opacity="0.7" />
 			<path d="M34 45 C 50 51, 70 51, 86 45" opacity="0.7" />
 			<path d="M37 56 C 51 61, 69 61, 83 56" opacity="0.7" />
-			{/* the wing cases showing through, which is the only hint of an animal */}
 			<path d="M52 22 C 46 34, 46 50, 52 62" opacity="0.5" />
 			<path d="M68 22 C 74 34, 74 50, 68 62" opacity="0.5" />
 		</svg>
@@ -240,15 +219,12 @@ function Grub({ className = "" }: { className?: string }) {
 			strokeLinejoin="round"
 			aria-hidden="true"
 		>
-			{/* fat, curled, legless and unbothered */}
 			<path d="M96 34 C 100 20, 88 10, 68 12 C 44 14, 22 24, 16 42 C 12 56, 24 66, 44 66 C 68 66, 90 54, 96 40" />
 			<path d="M96 40 C 92 46, 84 50, 76 51" />
-			{/* body segments */}
 			<path d="M78 13 C 72 24, 71 40, 76 51" opacity="0.7" />
 			<path d="M62 15 C 55 27, 54 48, 60 62" opacity="0.7" />
 			<path d="M46 20 C 39 32, 38 52, 44 66" opacity="0.7" />
 			<path d="M31 28 C 25 38, 25 52, 30 62" opacity="0.7" />
-			{/* head end */}
 			<circle cx="99" cy="30" r="1.6" fill="currentColor" stroke="none" />
 			<path d="M102 26 C 107 23, 111 22, 114 23" opacity="0.8" />
 		</svg>

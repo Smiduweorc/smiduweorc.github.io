@@ -1,5 +1,4 @@
-// Hand-drawn ink accents. Drawn inline so they inherit currentColor and
-// stretch with whatever they are underlining.
+// Inline, so they inherit currentColor and stretch with what they underline.
 
 export function InkUnderline({ className = "" }: { className?: string }) {
 	return (

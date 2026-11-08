@@ -1,9 +1,6 @@
-// One of the ants has got out. Every so often it walks along the top edge of
-// the journal and off the other side. It is Mycocepurus because that one is
-// the smallest drawing in the collection and an escaped ant should be small.
-//
-// Pure CSS: the walk across and the step are both keyframes in index.css, so
-// it costs nothing between crossings. Under reduced motion it stays in.
+// One of the ants got out. It is Mycocepurus because that is the smallest
+// drawing in the collection, and an escaped ant should be small.
+// Pure CSS: the walk and the step are keyframes in index.css.
 
 import { Plate } from "./vivarium/artwork";
 

@@ -1,8 +1,7 @@
 import { formatWeekly, useWeeklyDownloads } from "./downloads";
 import type { Specimen } from "./specimens";
 
-/** Last week's npm downloads, as catalogue data. Renders nothing until the
- *  count arrives, and nothing at all for a specimen that is not on npm. */
+/** Renders nothing until the count arrives, or for a specimen not on npm. */
 export function NpmCount({
 	specimen,
 	className = "",
@@ -17,7 +16,7 @@ export function NpmCount({
 			className={"whitespace-nowrap font-mono " + className}
 			title={`${n.toLocaleString("en")} npm downloads last week`}
 		>
-			↓ {formatWeekly(n)} (npm)
+			{formatWeekly(n)} (npm)
 		</span>
 	);
 }

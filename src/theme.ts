@@ -1,5 +1,4 @@
-// The vivarium's lighting rig. Same eight-slot palette contract the rest of
-// the site is built against, so a theme is only ever a list of colours.
+// A theme is a list of eight colours. The rest of the site reads only these.
 
 export type Theme = {
 	id: string
@@ -17,7 +16,6 @@ export type Theme = {
 }
 
 export const themes: Theme[] = [
-	// The house look: a dim keeper's room, one warm lamp over the glass.
 	{
 		id: "nightkeeper",
 		name: "Night Keeper",
@@ -32,7 +30,6 @@ export const themes: Theme[] = [
 			accent: "#e0b04a",
 		},
 	},
-	// Daylight through the lid: paper, ink and one red stamp.
 	{
 		id: "daylight",
 		name: "Daylight Survey",
@@ -47,7 +44,6 @@ export const themes: Theme[] = [
 			accent: "#a83a2c",
 		},
 	},
-	// Moss, leaf litter, and something green moving in it.
 	{
 		id: "moss",
 		name: "Moss Terrarium",
@@ -62,8 +58,6 @@ export const themes: Theme[] = [
 			accent: "#8fc35e",
 		},
 	},
-	// Plain light and plain dark, for anyone who just wants the page out of
-	// the way.
 	{
 		id: "mono-light",
 		name: "Monochrome Light",
@@ -128,8 +122,7 @@ export function applyTheme(theme: Theme): void {
 	root.style.setProperty("--color-theme-text-primary", theme.colors.textPrimary)
 	root.style.setProperty("--color-theme-accent", theme.colors.accent)
 
-	// Persist the palette so the inline script in index.html can restore it
-	// before first paint (no-flash theme init).
+	// Read by the inline script in index.html, so the palette applies before first paint.
 	try {
 		localStorage.setItem(THEME_COLORS_STORAGE_KEY, JSON.stringify(theme.colors))
 	} catch {
