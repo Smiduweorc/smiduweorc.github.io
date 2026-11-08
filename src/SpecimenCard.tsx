@@ -4,15 +4,65 @@
 // table on the right, rather than as the tidy centred modal every project
 // site uses.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plate } from "./vivarium/artwork";
-import { accession, KIND_META, type Specimen } from "./specimens";
+import {
+	KIND_META,
+	type Reading,
+	type Specimen,
+} from "./specimens";
+import { NpmCount } from "./NpmCount";
+
+// On a phone the full pitch is a wall of text above the facts most people
+// open the card for, so it is folded to a preview of about this many letters.
+const PREVIEW_CHARS = 220;
+
+function useNarrow(): boolean {
+	const query = "(max-width: 639px)";
+	const [narrow, setNarrow] = useState(() => window.matchMedia(query).matches);
+	useEffect(() => {
+		const mq = window.matchMedia(query);
+		const onChange = () => setNarrow(mq.matches);
+		mq.addEventListener("change", onChange);
+		return () => mq.removeEventListener("change", onChange);
+	}, []);
+	return narrow;
+}
+
+/** The description, folded to a preview on a phone until asked for. Cut at
+ *  a word boundary, never mid-word. */
+function Description({ text }: { text: string }) {
+	const narrow = useNarrow();
+	const [open, setOpen] = useState(false);
+	const foldable = narrow && text.length > PREVIEW_CHARS;
+	const shown =
+		foldable && !open
+			? text.slice(0, text.lastIndexOf(" ", PREVIEW_CHARS)).replace(/[\s,;:.]+$/, "") + "…"
+			: text;
+	return (
+		<div className="mb-4">
+			<p className="leading-7 text-theme-text">{shown}</p>
+			{foldable && (
+				<button
+					type="button"
+					onClick={() => setOpen((v) => !v)}
+					aria-expanded={open}
+					className="font-hand mt-1 py-2 text-theme-accent underline decoration-theme-accent/40 underline-offset-4"
+				>
+					{open ? "fold it back up" : "read the rest"}
+				</button>
+			)}
+		</div>
+	);
+}
 
 export function SpecimenCard({
 	specimen,
+	reading,
 	onClose,
 }: {
 	specimen: Specimen | null;
+	reading: Reading;
 	onClose: () => void;
 }) {
 	const closeRef = useRef<HTMLButtonElement>(null);
@@ -43,12 +93,13 @@ export function SpecimenCard({
 	if (!specimen) return null;
 
 	const meta = KIND_META[specimen.kind];
+	const guide = reading === "guide";
 	const rows: [string, string][] = [
-		["order", specimen.taxonomy.order],
-		["habitat", specimen.taxonomy.habitat],
-		["diet", specimen.taxonomy.diet],
-		["stage", specimen.taxonomy.stage],
-		["first described", specimen.taxonomy.described],
+		[guide ? "order" : "language", specimen.taxonomy.order],
+		[guide ? "habitat" : "runs in", specimen.taxonomy.habitat],
+		[guide ? "diet" : "handles", specimen.taxonomy.diet],
+		[guide ? "stage" : "status", specimen.taxonomy.stage],
+		[guide ? "first described" : "started", specimen.taxonomy.described],
 	];
 
 	return (
@@ -60,7 +111,7 @@ export function SpecimenCard({
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="specimen-card-title"
-			className="fixed inset-0 z-50 overflow-y-auto"
+			className="fixed inset-0 z-[70] overflow-y-auto"
 		>
 			<button
 				type="button"
@@ -75,13 +126,13 @@ export function SpecimenCard({
 					{/* the pin holding the card to the board */}
 					<span
 						aria-hidden="true"
-						className="absolute left-1/2 top-2.5 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-theme-accent shadow-[0_2px_4px_rgb(0_0_0_/_0.5)]"
+						className="absolute left-1/2 top-2.5 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-theme-comment shadow-[0_2px_4px_rgb(0_0_0_/_0.5)]"
 					/>
 
 					<div className="flex items-start justify-between gap-4 border-b border-theme-border px-5 pb-3 pt-7 sm:px-7">
 						<div className="min-w-0">
 							<p className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-theme-comment">
-								{accession(specimen)} · {meta.title}
+								{meta.title}
 							</p>
 							<h2
 								id="specimen-card-title"
@@ -89,15 +140,17 @@ export function SpecimenCard({
 							>
 								{specimen.name}
 							</h2>
-							<p className="font-mono text-sm italic text-theme-text-secondary">
-								{specimen.binomial}
-							</p>
+							{guide && (
+								<p className="font-mono text-sm italic text-theme-text-secondary">
+									{specimen.binomial}
+								</p>
+							)}
 						</div>
 						<button
 							ref={closeRef}
 							type="button"
 							onClick={onClose}
-							className="shrink-0 rounded-sm border border-theme-border px-2.5 py-1.5 font-mono text-xs uppercase tracking-wider text-theme-text transition hover:border-theme-accent/70 hover:bg-theme-accent/10 hover:text-theme-accent"
+							className="shrink-0 rounded-sm border border-theme-border px-2.5 py-1 text-sm text-theme-text transition hover:border-theme-accent/70 hover:bg-theme-accent/10 hover:text-theme-accent"
 						>
 						close
 						</button>
@@ -116,20 +169,21 @@ export function SpecimenCard({
 							<p className="font-hand mb-3 text-base leading-snug text-theme-text-primary">
 								{specimen.tagline}
 							</p>
-							<p className="mb-4 leading-7 text-theme-text">
-								{specimen.description}
-							</p>
+							{/* keyed so a different card starts folded again */}
+							<Description key={specimen.id} text={specimen.description} />
 
-							<dl className="index-card-lines mb-4 rounded-sm border border-theme-border/70 bg-theme-bg/30 px-3 py-2">
+							<dl className="index-card-lines mb-4 rounded-sm border border-theme-border/70 bg-theme-bg/30 px-3 pb-1">
 								{rows.map(([label, value]) => (
 									<div
 										key={label}
 										// Row height must equal the rule pitch in
 										// .index-card-lines (28px) or the text drifts
-										// off the ruling a little more with each row.
-										className="flex gap-3 text-sm leading-7"
+										// off the ruling a little more with each row,
+										// and the list has no top padding: the ruling
+										// starts at its top edge.
+										className="flex flex-col py-1.5 text-sm sm:flex-row sm:items-baseline sm:gap-3 sm:py-0 sm:leading-7"
 									>
-										<dt className="w-[7.5rem] shrink-0 font-mono text-xs uppercase tracking-wider text-theme-comment">
+										<dt className="text-xs text-theme-comment sm:w-[7.5rem] sm:shrink-0 sm:text-sm sm:leading-7">
 											{label}
 										</dt>
 										<dd className="min-w-0 flex-1 text-theme-text">{value}</dd>
@@ -149,6 +203,7 @@ export function SpecimenCard({
 										{l.label.toLowerCase()} ↗
 									</a>
 								))}
+								<NpmCount specimen={specimen} className="text-theme-comment" />
 							</div>
 
 							<p className="font-mono text-xs leading-relaxed text-theme-comment">
@@ -158,10 +213,12 @@ export function SpecimenCard({
 					</div>
 
 					{/* the collector's note, in pencil along the bottom edge */}
-					<p className="font-hand border-t border-theme-border/60 px-5 py-3 text-sm text-theme-text-secondary sm:px-7">
-						<span className="text-theme-comment">note: </span>
-						{specimen.note}
-					</p>
+					{guide && (
+						<p className="font-hand border-t border-theme-border/60 px-5 py-3 text-sm text-theme-text-secondary sm:px-7">
+							<span className="text-theme-comment">note: </span>
+							{specimen.note}
+						</p>
+					)}
 				</div>
 			</div>
 		</div>

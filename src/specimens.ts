@@ -10,6 +10,11 @@ import type { ArtworkKey } from "./vivarium/artwork";
 
 export type Kind = "library" | "instrument" | "cast" | "colony";
 
+/** How the collection is read: as a field guide, with the taxonomy joke and
+ *  the margin notes, or as a plain spec sheet for someone who only wants to
+ *  know what the thing is and what it runs on. Same facts either way. */
+export type Reading = "guide" | "spec";
+
 export type Specimen = {
 	id: string;
 	/** Display name, as the repo spells it. */
@@ -36,6 +41,9 @@ export type Specimen = {
 	note: string;
 	/** Flagships get a slot in the vivarium; the rest live in the cabinet. */
 	inTank?: boolean;
+	/** Laid open at the top of the collection. The rest wait in drawers, so a
+	 *  first visit meets a handful of animals instead of all of them at once. */
+	highlight?: boolean;
 	/** Bagworm's reaction when you open this card. */
 	quip?: string;
 };
@@ -67,6 +75,7 @@ const GH = "https://github.com/Smiduweorc";
 export const SPECIMENS: Specimen[] = [
 	{
 		id: "lacewing",
+		highlight: true,
 		name: "Lacewing",
 		binomial: "Chrysoperla tokenifera",
 		kind: "library",
@@ -74,9 +83,9 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "A JWT library that won't let you make the usual JWT mistakes.",
 		description:
-			"You define a verification profile once, and it makes you fill in the issuer, audience, algorithm list and key source. Every verify call then goes through it. There is no low-level mode to get wrong. On top of that you get remote JWKS with caching and rotation, token revocation, access and refresh token presets, secure cookie and bearer helpers, and encrypted tokens. A remote JWKS that goes down keeps serving its last good keys for a bounded window and then fails closed, and secrets in a payload are caught at sign time. What RFC 8725 says you must do is checked by the types or at runtime, instead of sitting in the docs as advice. Insecure use is still possible, but only through unsafe-prefixed escape hatches that are easy to grep for in review.",
+			"You define a profile once per kind of token: the expected typ, the trusted issuer, the required audience, an algorithm allowlist, the key source and a maximum age. jwtVerify(token, profile) is the only way to verify, and the algorithm, key and typ always come from the profile, never from the token header. Signing and encryption are done by jose, its one runtime dependency; Lacewing adds the checks around them: a short algorithm list, required iss, aud and exp, a bounded JWKS client with no default timeouts, revocation, and HttpOnly cookie helpers. Every RFC 8725 requirement a library can check has a test, and CI fails if one stops passing. Anything that loosens a check past its bound is named unsafe* or LEGACY_*, so one grep audits a codebase. RS* lives behind lacewing/legacy/rsa, and alg: none is not there at all.",
 		taxonomy: {
-			order: "TypeScript, ESM only, Node 24+",
+			order: "TypeScript, ESM only, Node 24+, on jose",
 			habitat: "anything that hands out or checks tokens",
 			diet: "forged tokens and \"alg\": \"none\"",
 			stage: "released",
@@ -93,6 +102,7 @@ export const SPECIMENS: Specimen[] = [
 	},
 	{
 		id: "cephalote",
+		highlight: true,
 		name: "Cephalote",
 		binomial: "Cephalotes cryptovorans",
 		kind: "instrument",
@@ -120,6 +130,7 @@ export const SPECIMENS: Specimen[] = [
 	},
 	{
 		id: "bagworm",
+		highlight: true,
 		name: "Bagworm",
 		binomial: "Psyche portabilis",
 		kind: "instrument",
@@ -162,6 +173,7 @@ export const SPECIMENS: Specimen[] = [
 			described: "October 2026",
 		},
 		tags: ["Go", "OpenAPI", "OpenRPC", "gRPC", "docx", "documentation"],
+		highlight: true,
 		links: [
 			{ label: "GitHub", href: `${GH}/bollworm` },
 			{ label: "Releases", href: `${GH}/bollworm/releases` },
@@ -289,25 +301,28 @@ export const SPECIMENS: Specimen[] = [
 	},
 	{
 		id: "dung-beetle-template",
+		highlight: true,
 		name: "dung-beetle-template",
 		binomial: "Scarabaeus schematophagus",
 		kind: "cast",
 		art: "dung-beetle",
 		inTank: true,
 		tagline:
-			"Aphid, plus a generator that writes the client from an OpenAPI document.",
+			"Aphid, plus a generator that writes the client from an OpenAPI, OpenRPC or .proto document.",
 		description:
-			"Point the config at an API's OpenAPI document, run the generator, and it writes one readable function per endpoint for you to review, commit and publish under your own name. The generator lives in tools/ as build-time scaffolding and is never published, so the people who install your client install none of it. Each run prints the public names it added and removed, which turns a change to your package's API into something a person sees in review rather than something that lands unannounced. Where a path makes an ugly function name, a names map is where you say so. Underneath is the same runtime and the same boundary as Aphid.",
+			"Point the config at an API's OpenAPI document, OpenRPC document or .proto files, run the generator, and it writes one readable function per endpoint for you to review, commit and publish under your own name. The generator lives in tools/ as build-time scaffolding and is never published, so the people who install your client install none of it. Each run prints the public names it added and removed, which turns a change to your package's API into something a person sees in review rather than something that lands unannounced. Where a path makes an ugly function name, a names map is where you say so. You keep only the protocols you name in the config, and a protocol you leave out is gone entirely: OpenAPI and OpenRPC add no runtime dependencies, and gRPC adds @bufbuild/protobuf. Underneath is the same boundary as Aphid.",
 		taxonomy: {
 			order: "TypeScript, ESM, Node 22+",
 			habitat: "any API that publishes a schema",
-			diet: "OpenAPI documents",
+			diet: "OpenAPI, OpenRPC and .proto files",
 			stage: "template",
 			described: "August 2026",
 		},
 		tags: [
 			"TypeScript",
 			"OpenAPI",
+			"OpenRPC",
+			"gRPC",
 			"code generation",
 			"API client",
 			"template",
@@ -391,10 +406,10 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"Makes a POST safe to send twice: one execution per Idempotency-Key, exact replay for every retry.",
 		description:
-			"The client sends an Idempotency-Key; the ledger claims it in one atomic store operation, runs your handler exactly once, and replays the stored response to every retry. A key reused with a different body is refused as a 422, a missing key as a 400, and two copies arriving at once produce one execution and one 409, which is what the IETF draft says should happen. The draft has expired, but it is still the best reference there is. Retention, lease length and maximum key length are all required, because they are properties of your clients and your store, and scope is required too, so one client can never replay another's response by guessing. The only store shipped is an in-memory one for a single process and for tests: the contract is three methods, and the atomic one is SET NX in Redis. It sits after auth and before the handler. Firefly's retry on the client is what sends the second copy; this is the server holding the client to its promise that it is the same request.",
+			"The client sends an Idempotency-Key; the ledger claims it in one atomic store operation, runs your handler exactly once, and replays the stored response to every retry. A key reused with a different body is refused as a 422, a missing key as a 400, and two copies arriving at once produce one execution and one 409, which is what the IETF draft says should happen. The draft has expired, but it is still the best reference there is. Retention, lease length and maximum key length are all required, because they are properties of your clients and your store, and scope is required too, so one client can never replay another's response by guessing. The only store shipped is an in-memory one for a single process and for tests: the contract is three methods, and the atomic one is SET NX in Redis. Over HTTP it sits after auth and before the handler, and the same ledger works without HTTP, for a queue consumer or a cron that may fire twice. Keys are RFC 8941 Strings, and a throwing handler releases its key and rethrows unchanged. Firefly's retry on the client is what sends the second copy; this is the server holding the client to its promise that it is the same request.",
 		taxonomy: {
 			order: "TypeScript, ESM, Node 22+",
-			habitat: "the server side of a retried POST",
+			habitat: "the server side of a retried POST, or a job that fires twice",
 			diet: "the same request, arriving twice",
 			stage: "released",
 			described: "September 2026",
@@ -431,9 +446,9 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"Provider-aware email canonicalization, so equal mailboxes compare equal.",
 		description:
-			"Mail providers each have their own idea of which addresses reach the same mailbox: Gmail ignores dots and anything after a plus, and googlemail.com is gmail.com; Yahoo tags with a hyphen; AOL does not tag at all. Phasmid knows the rules for fifteen providers and returns one canonical string per mailbox, so a dedupe or a re-registration check can compare with ===. A domain it does not recognise gets the conservative treatment, domain lowercased and local part left alone, because RFC 5321 allows case-sensitive local parts and merging two real mailboxes by accident is worse than missing an alias. Every rule is overridable: add a provider, override a built-in by domain, replace the lot, or set a default rule for the domains it does not know. Runs in the browser and in Node, pure ESM, nothing at runtime. Beyond normalizeEmail there is isSameEmail, a detailed form that reports the provider and the stripped tag, and malformed input comes back trimmed and flagged invalid rather than throwing.",
+			"Mail providers each have their own idea of which addresses reach the same mailbox: Gmail ignores dots and anything after a plus, and googlemail.com is gmail.com; Yahoo tags with a hyphen; AOL does not tag at all. Phasmid knows the rules for fifteen providers and returns one canonical string per mailbox, so a dedupe or a re-registration check can compare with ===. A domain it does not recognise gets the conservative treatment, domain lowercased and local part left alone, because RFC 5321 allows case-sensitive local parts and merging two real mailboxes by accident is worse than missing an alias. Every rule is overridable: add a provider, override a built-in by domain, replace the lot, or set a default rule for the domains it does not know. Pure ESM with no node: imports and nothing at runtime, so it also loads in a browser, though CI only tests Node. Beyond normalizeEmail there is isSameEmail, a detailed form that reports the provider and the stripped tag, and malformed input comes back trimmed and flagged invalid rather than throwing.",
 		taxonomy: {
-			order: "TypeScript, ESM, browser and Node",
+			order: "TypeScript, ESM, Node 22+",
 			habitat: "signup forms and the users table behind them",
 			diet: "j.o.h.n+promo@googlemail.com",
 			stage: "released",
@@ -446,6 +461,7 @@ export const SPECIMENS: Specimen[] = [
 			"canonicalization",
 			"zero dependencies",
 		],
+		highlight: true,
 		links: [
 			{ label: "GitHub", href: `${GH}/phasmid` },
 			{ label: "npm", href: "https://www.npmjs.com/package/phasmid" },
@@ -464,9 +480,9 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"DPoP for Lacewing: the token, the proof and the key binding checked as one, or the request is refused.",
 		description:
-			"For resource servers that already verify access tokens with Lacewing and now need them bound to a key, which is what FAPI 2.0 asks for. It implements the resource-server side of RFC 9449: one call checks the access token through your Lacewing profile, the DPoP proof, the binding between them (cnf.jkt and ath), freshness and replay, in a fixed order with the cheap checks first and the replay store last. There is no proof-only verifier to call by mistake, the origin is configured rather than read from Host or X-Forwarded-*, and the replay store is required by the type, because no safe DPoP verifier is stateless. Redis and Postgres stores ship on their own subpaths. Server nonces are an HMAC, so every node with the same secret accepts them and nothing is stored. When it says no, it also writes the refusal: a 401 with a spec-correct WWW-Authenticate: DPoP challenge, and a typed reason code for your logs that the client never sees.",
+			"For resource servers that already verify access tokens with Lacewing and now need them bound to a key, which is what FAPI 2.0 asks for. It implements the resource-server side of RFC 9449: one call checks the access token through your Lacewing profile, the DPoP proof, the binding between them (cnf.jkt and ath), freshness and replay, in a fixed order with the cheap checks first and the replay store last. Proofs are limited to the FAPI 2.0 algorithms, PS256, ES256 and Ed25519. There is no proof-only verifier to call by mistake, the origin is configured rather than read from Host or X-Forwarded-*, and the replay store is required by the type, because no safe DPoP verifier is stateless. Redis and Postgres stores ship on their own subpaths. Server nonces are an HMAC, so every node with the same secret accepts them and nothing is stored. When it says no, it also writes the refusal: a 401 with a spec-correct WWW-Authenticate: DPoP challenge, and a typed reason code for your logs that the client never sees.",
 		taxonomy: {
-			order: "TypeScript, ESM only, Node 24+",
+			order: "TypeScript, ESM only, Node 24+, Lacewing 3 as a peer",
 			habitat: "resource servers, one step behind Lacewing",
 			diet: "tokens lifted off the wire, out of a log, or from a proxy",
 			stage: "released",
@@ -539,12 +555,12 @@ export const SPECIMENS: Specimen[] = [
 		tagline:
 			"A Rust port of bridge.'s Dash compiler: the same project in, the same bytes out.",
 		description:
-			"Ports @bridge-editor/dash-compiler 0.13.0, the compiler bridge. uses for Minecraft Bedrock add-ons, and keeps its plugin hooks, config.json, the cache and every byte of output. TS Dash is the specification: where it does something odd that a project can observe, leafcutter-ant does the same odd thing and writes it down in a quirk ledger. Parity is measured, not described. A pinned copy of the JavaScript records golden vectors and a corpus of whole builds, the Rust tests compare against every one, and CI records them again and fails if they drift. Compiler plugins stay JavaScript and run in an embedded QuickJS. Molang, custom components and watch mode are still to come, and nothing new goes in until the output matches.",
+			"Ports @bridge-editor/dash-compiler 0.13.0, the compiler bridge. uses for Minecraft Bedrock add-ons, and keeps its plugin hooks, config.json, the cache and every byte of output. TS Dash is the specification: where it does something odd that a project can observe, leafcutter-ant does the same odd thing and writes it down in a quirk ledger. Parity is measured, not described. A pinned copy of the JavaScript records golden vectors and a corpus of whole builds, the Rust tests compare against every one, and CI records them again and fails if they drift. It now builds projects with every built-in plugin TS Dash has, Molang and the custom entity, item and block components included, plus compiler plugins from extensions, which stay JavaScript and run in an embedded QuickJS. Watch mode and hot updates come next, and nothing new goes in until the output matches.",
 		taxonomy: {
 			order: "Rust, with QuickJS and swc inside",
 			habitat: "Minecraft Bedrock add-on projects",
 			diet: "TS Dash's output, byte for byte",
-			stage: "in progress",
+			stage: "not released",
 			described: "September 2026",
 		},
 		tags: ["Rust", "compiler", "Minecraft Bedrock", "bridge.", "QuickJS"],
@@ -612,9 +628,9 @@ export const SPECIMENS: Specimen[] = [
 		inTank: true,
 		tagline: "Change embedding models without a flag day.",
 		description:
-			"You give it two profiles, each an embedding model plus the vector store that holds its vectors. Writes go to both; reads go to whichever one the current phase says. In compare, a chosen share of queries also run against the other side, and both hit lists come back to you with their scores, so you decide what ready means. Move the phase when the new index looks good, and move it back if it doesn't. Every document and delete carries a version and a store keeps the higher one, so a backfill of an old copy cannot overwrite a newer write. A conformance check tests your store adapter against that rule. It does not copy vectors between databases, ship store adapters, or decide when you are ready.",
+			"Moves a live RAG index from one embedding model to another. You give it two profiles, each an embedding model plus the vector store that holds its vectors. Writes go to both until the last phase; reads go to whichever one the current phase says. In compare, a chosen share of queries also run against the other side, and both hit lists come back to you with their scores, so you decide what ready means. Move the phase with setPhase when the new index looks good, and move it back if it doesn't. Every document and delete carries a version and a store keeps the higher one, so a backfill of an old copy cannot overwrite a newer write. A conformance check tests your store adapter against that rule. It does not copy vectors between databases, ship store adapters, or decide when you are ready.",
 		taxonomy: {
-			order: "TypeScript, ESM, Node 22+",
+			order: "TypeScript, ESM, Node 24+",
 			habitat: "a RAG pipeline halfway between two embedding models",
 			diet: "documents, twice",
 			stage: "released",
@@ -636,6 +652,36 @@ export const SPECIMENS: Specimen[] = [
 		note: "a damselfly. two wings either side, one body, and it only ever lands in one place at a time.",
 		quip: "writes to both ponds. drinks from whichever one you say.",
 	},
+	{
+		id: "rove-beetle",
+		name: "RoveBeetle",
+		binomial: "Staphylinus protocollaris",
+		kind: "cast",
+		art: "rove-beetle",
+		inTank: true,
+		tagline:
+			"Dung beetle, but for UTCP: a typed client written from a tool manual.",
+		description:
+			"Point the config at a UTCP manual, list the protocols the package may speak, and the generator writes one function per tool for you to review and publish under your own name. The protocols list has no default, and a client handed the wrong credentials does not compile. Eleven protocols ship as their own subpaths, http, sse, streamable HTTP, websocket, graphql, MCP, cli, tcp, udp, file and text, so a package only carries the transports it named. It holds the same boundary as Aphid and Dung Beetle: no retries, no timeouts, no caching, no schema validation and no reading process.env, and the README says where each one goes instead. Not released yet: the protocols and the generator are written and tested on Linux, and the Windows and macOS CI has still to run.",
+		taxonomy: {
+			order: "TypeScript, ESM, Node 22+ or Bun",
+			habitat: "a package that wraps somebody else's tools",
+			diet: "UTCP manuals",
+			stage: "not released",
+			described: "November 2026",
+		},
+		tags: [
+			"TypeScript",
+			"UTCP",
+			"MCP",
+			"code generation",
+			"API client",
+			"template",
+		],
+		links: [{ label: "GitHub", href: `${GH}/RoveBeetle` }],
+		note: "the beetle that gave up its wing cases to run everywhere. eleven protocols, same idea.",
+		quip: "same dung. different hill.",
+	},
 ];
 
 export const byId = (id: string): Specimen | undefined =>
@@ -646,10 +692,4 @@ export const tankSpecimens = (): Specimen[] => SPECIMENS.filter((s) => s.inTank)
 export const byKind = (kind: Kind): Specimen[] =>
 	SPECIMENS.filter((s) => s.kind === kind);
 
-/** Accession numbers, in catalogue order: SMD-001, SMD-002, and so on. */
-const ACCESSION = new Map(
-	SPECIMENS.map((s, i) => [s.id, `SMD-${String(i + 1).padStart(3, "0")}`]),
-);
 
-export const accession = (s: Specimen): string =>
-	ACCESSION.get(s.id) ?? "SMD-???";
