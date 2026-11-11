@@ -94,7 +94,7 @@ function Entry({
 			    never sets its height, so keepsakes cannot leave a gap. */}
 			<div className="md:flex md:h-0 md:min-h-full md:flex-col md:overflow-hidden md:pt-1">
 				<p className="font-mono text-xs uppercase tracking-widest text-theme-comment">
-					plate no. {plate}
+					Section No. {plate}
 				</p>
 				<p className="font-hand mt-2 hidden -rotate-2 text-sm leading-snug text-theme-text-secondary md:block">
 					{margin}
@@ -200,7 +200,7 @@ function WebPage({ onOpen }: { onOpen: (s: Specimen) => void }) {
 		<div>
 			<p className="mb-10 max-w-[60ch] text-theme-text-secondary">
 				Which animal came from which, and which jobs they pass to each other.
-				Solid lines are descent; dashed lines are work handed to a sibling.
+				Solid lines means parent-child projects dashed lines are work handed to a sibling.
 			</p>
 			<div id="food-web">
 				<FoodWeb onOpen={onOpen} />
