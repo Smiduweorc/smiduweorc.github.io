@@ -1,0 +1,11 @@
+# Allow Google's crawlers to index the whole site.
+User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Google-InspectionTool
+Allow: /
+
+# Everyone else is allowed too.
+User-agent: *
+Allow: /
+
+Sitemap: https://smiduweorc.github.io/sitemap.xml
