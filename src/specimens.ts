@@ -43,6 +43,9 @@ export type Specimen = {
 	highlight?: boolean;
 	/** Bagworm's reaction when you open this card. */
 	quip?: string;
+	/** One thing off its diet, small enough to drop into the tank. Only the
+	 *  animal that eats it comes for it. */
+	crumb?: string;
 };
 
 export const KIND_META: Record<Kind, { title: string; blurb: string }> = {
@@ -78,6 +81,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "lacewing",
 		inTank: true,
+		crumb: "alg: none",
 		tagline: "A JWT library that won't let you make the usual JWT mistakes.",
 		description:
 			"You define a profile once per kind of token: the expected typ, the trusted issuer, the required audience, an algorithm allowlist, the key source and a maximum age. jwtVerify(token, profile) is the only way to verify, and the algorithm, key and typ always come from the profile, never from the token header. Signing and encryption are done by jose, its one runtime dependency; Lacewing adds the checks around them: a short algorithm list, required iss, aud and exp, a bounded JWKS client with no default timeouts, revocation, and HttpOnly cookie helpers. Every RFC 8725 requirement a library can check has a test, and CI fails if one stops passing. Anything that loosens a check past its bound is named unsafe* or LEGACY_*, so one grep audits a codebase. RS* lives behind lacewing/legacy/rsa, and alg: none is not there at all.",
@@ -105,6 +109,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "instrument",
 		art: "cephalote",
 		inTank: true,
+		crumb: "MD5",
 		tagline: "Finds the weak crypto in your code and tells you where it is.",
 		description:
 			"Cephalote reads a source tree and reports broken or ageing cryptography: MD5, SHA-1, DES, RC4, undersized RSA keys, keys pasted straight into the source. It is one static binary with nothing to install, so it drops into CI or onto a server as is. Output can be text, JSON or SARIF, and --exit-code fails the build when it finds something. Go gets a real AST, thirteen other languages go through Tree-sitter, and anything else gets a lower-confidence regex pass over a catalogue of 50+ algorithms. --scheme turns it into a search for where a given algorithm is still used, and a YAML config and inline cephalote:ignore comments cover exclusions and suppressions.",
@@ -133,6 +138,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "instrument",
 		art: "bagworm",
 		inTank: true,
+		crumb: "workspace config",
 		tagline: "Carries your dev shell into a container on any runtime.",
 		description:
 			"Put a bagworm.yaml in your project with one line saying which image you want, then run bagworm enter from anywhere in the tree. You get a shell in that container. Files you create inside belong to you on the host, and the container is thrown away when you leave. It behaves the same on Docker, nerdctl and podman, which is the whole reason it exists. A config only runs once you have approved it, and again after any change to it. Your git, ssh and gh credentials are mounted read-only, and only if the config asks for them. A typo in the config is a real error that names the key and the line, not a silent shrug.",
@@ -159,6 +165,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "instrument",
 		art: "bollworm",
 		inTank: true,
+		crumb: ".proto file",
 		tagline: "Turns an API spec into the Word document someone asked for.",
 		description:
 			"Bollworm reads the three ways an API is usually written down: an OpenAPI 3.0, 3.1 or 3.2 spec, an OpenRPC 1.x spec for JSON-RPC, or the gRPC services in a .proto file or a FileDescriptorSet. From any of them it writes a .docx that looks typed by a person: a title page, a contents page, an introduction, a chapter per group of calls with a section per call, and the data models, all in Word's own built-in styles, or in a company template's via --reference-doc. It follows $refs into other files and fetches https ones only when you pass --allow-remote-refs. It never connects to the API it documents, never overwrites a file unless you pass --force, and writes A4 or Letter.",
@@ -246,6 +253,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "colony",
 		art: "termite",
 		inTank: true,
+		crumb: "feature request",
 		tagline:
 			"A feedback board and release tracker for projects that ship in versions.",
 		description:
@@ -269,7 +277,6 @@ export const SPECIMENS: Specimen[] = [
 		links: [
 			{ label: "GitHub", href: `${GH}/termite` },
 			{ label: "Docs", href: `${GH}/termite/blob/master/docs/docs.md` },
-			{ label: "Write-up", href: "https://grmlfolio.vercel.app/" },
 		],
 		note: "the tokens it hands out are checked by lacewing, top drawer.",
 		quip: "eats wood. this one eats the todo list instead.",
@@ -281,6 +288,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "cast",
 		art: "aphid",
 		inTank: true,
+		crumb: "policy decision",
 		tagline: "A skeleton for wrapping an HTTP API, and a boundary it holds to.",
 		description:
 			"You describe each endpoint as a plain object: method, path, query, and a decode when the response needs unwrapping. A client joins the path onto the base URL, layers the headers, sends the request through a transport you supply, and decodes the result. Building an operation touches nothing, so the request side is tested on values rather than against a network. What makes it worth copying is the list of what it will not do: no retries, no caching, no breakers, no input or response validation, no logging, no reading the environment, and no work at import time. Every exclusion in the README says where that work goes instead.",
@@ -335,6 +343,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "firefly",
 		inTank: true,
+		crumb: "failing upstream",
 		tagline:
 			"Retries, deadlines, breakers, bulkheads, rate limits and hedges for one process, with no defaults.",
 		description:
@@ -368,6 +377,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "repletes",
 		inTank: true,
+		crumb: "the same call",
 		tagline: "A cache policy engine: serve, refresh, replace or rethrow.",
 		description:
 			"You supply the key, the store and the freshness and retention windows, and Repletes decides what a read does. Fresh, it serves. Stale, it serves and refreshes behind, one refresh per key, never awaited and never an unhandled rejection. Retained, it serves only if the action failed. The stale-while-revalidate and stale-if-error semantics are inspired by RFC 5861, fromCacheControl reads a Cache-Control header off anything shaped like a response, and read hands back the state alongside the value, so a caller can tell a fresh answer from one that survived an upstream failure. It is not an HTTP cache and ships no transport. There is no way to prime it either, because every entry's windows describe an action that actually completed.",
@@ -400,6 +410,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "mycocepurus",
 		inTank: true,
+		crumb: "duplicate request",
 		tagline:
 			"Makes a POST safe to send twice: one execution per Idempotency-Key, exact replay for every retry.",
 		description:
@@ -440,6 +451,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "phasmid",
 		inTank: true,
+		crumb: "j.o.h.n+promo@",
 		tagline:
 			"Provider-aware email canonicalization, so equal mailboxes compare equal.",
 		description:
@@ -474,6 +486,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "antlion",
 		inTank: true,
+		crumb: "stolen token",
 		tagline:
 			"DPoP for Lacewing: the token, the proof and the key binding checked as one, or the request is refused.",
 		description:
@@ -549,6 +562,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "instrument",
 		art: "leafcutter-ant",
 		inTank: true,
+		crumb: "TS Dash output",
 		tagline:
 			"A Rust port of bridge.'s Dash compiler: the same project in, the same bytes out.",
 		description:
@@ -598,6 +612,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "cast",
 		art: "darter",
 		inTank: true,
+		crumb: "wrong-shaped JSON",
 		tagline: "Aphid, in Dart: a typed API wrapper skeleton for Flutter, the VM and the web.",
 		description:
 			"Describe each endpoint as a typed value and a client turns it into a request, sends it once through the http.Client you hand it, and decodes the response. One runtime dependency, package:http, so the wrapper runs in a Flutter app, on the Dart VM and in the browser, and importing it does nothing at all. It holds Aphid's boundary: no retries, no caching, no breakers, no logging, no reading the environment, and the README says where each of those goes instead. One row differs, because Dart cannot pretend: fromJson builds a real object, so a response of the wrong shape is a DecodeException rather than a value lying about its type. There will be no dung-beetle for this one; Dart already has its generators.",
@@ -623,6 +638,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "library",
 		art: "argia",
 		inTank: true,
+		crumb: "document",
 		tagline: "Change embedding models without a flag day.",
 		description:
 			"Moves a live RAG index from one embedding model to another. You give it two profiles, each an embedding model plus the vector store that holds its vectors. Writes go to both until the last phase; reads go to whichever one the current phase says. In compare, a chosen share of queries also run against the other side, and both hit lists come back to you with their scores, so you decide what ready means. Move the phase with setPhase when the new index looks good, and move it back if it doesn't. Every document and delete carries a version and a store keeps the higher one, so a backfill of an old copy cannot overwrite a newer write. A conformance check tests your store adapter against that rule. It does not copy vectors between databases, ship store adapters, or decide when you are ready.",
@@ -656,6 +672,7 @@ export const SPECIMENS: Specimen[] = [
 		kind: "cast",
 		art: "rove-beetle",
 		inTank: true,
+		crumb: "UTCP manual",
 		tagline:
 			"Dung beetle, but for UTCP: a typed client written from a tool manual.",
 		description:

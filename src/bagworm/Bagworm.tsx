@@ -6,6 +6,7 @@ import {
 	useState,
 	type ReactNode,
 } from "react";
+import { useCoarsePointer, usePrefersReducedMotion } from "../media";
 
 // Ported from grml's lab. The behaviour is unchanged. The two-audience gate is gone:
 // this site has one audience (developers), so the cold open greets you and gets out of
@@ -28,16 +29,16 @@ type Frame =
 	| "dizzy2";
 
 const FRAME_SRC: Record<Frame, string> = {
-	can: "/bagworm/can.webp",
-	front: "/bagworm/bagworm_front.webp",
-	hi: "/bagworm/bagworm_front_hi.webp",
-	talk: "/bagworm/bagworm_front_excited_talk.webp",
-	leanL: "/bagworm/bagworm_lean_left.webp",
-	leanR: "/bagworm/bagworm_lean_right.webp",
-	flopL: "/bagworm/bagworm_left.webp",
-	flopR: "/bagworm/bagworm_right.webp",
-	dizzy1: "/bagworm/bagworm_dizzy.webp",
-	dizzy2: "/bagworm/bagworm_dizzy2.webp",
+	can: "/mascot/can.webp",
+	front: "/mascot/bagworm_front.webp",
+	hi: "/mascot/bagworm_front_hi.webp",
+	talk: "/mascot/bagworm_front_excited_talk.webp",
+	leanL: "/mascot/bagworm_lean_left.webp",
+	leanR: "/mascot/bagworm_lean_right.webp",
+	flopL: "/mascot/bagworm_left.webp",
+	flopR: "/mascot/bagworm_right.webp",
+	dizzy1: "/mascot/bagworm_dizzy.webp",
+	dizzy2: "/mascot/bagworm_dizzy2.webp",
 };
 
 // Tallest frame is dizzy (800x1029); reserve that box so swaps never reflow.
@@ -79,24 +80,6 @@ const INTRO: ReactNode[] = [
 ];
 const INTRO_BEAT_MS = [2600, 3000, 6000];
 
-/** True on touch devices: no cursor, so no hover and no continuous stream of
- * "where you are pointing" to lean toward. Several behaviours below need a
- * different input to stand in for it. */
-function useCoarsePointer(): boolean {
-	const [coarse, setCoarse] = useState(
-		() =>
-			typeof window !== "undefined" &&
-			window.matchMedia("(pointer: coarse)").matches,
-	);
-	useEffect(() => {
-		const mq = window.matchMedia("(pointer: coarse)");
-		const onChange = () => setCoarse(mq.matches);
-		mq.addEventListener("change", onChange);
-		return () => mq.removeEventListener("change", onChange);
-	}, []);
-	return coarse;
-}
-
 // A phone's accelerometer is the closest thing touch has to a cursor: it is
 // continuous, and it says which way you are leaning. iOS 13+ only hands it
 // over from inside a user gesture, so the gate's choice tap does the asking
@@ -132,21 +115,6 @@ function requestTiltAccess() {
 		},
 		() => {},
 	);
-}
-
-function usePrefersReducedMotion(): boolean {
-	const [reduced, setReduced] = useState(
-		() =>
-			typeof window !== "undefined" &&
-			window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-	);
-	useEffect(() => {
-		const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-		const onChange = () => setReduced(mq.matches);
-		mq.addEventListener("change", onChange);
-		return () => mq.removeEventListener("change", onChange);
-	}, []);
-	return reduced;
 }
 
 function useTimers() {
@@ -760,9 +728,11 @@ export function BagwormParked({ sceneKey }: { sceneKey: string }) {
 		index: number;
 		el: HTMLElement | null;
 	} => {
+		// Journal pages that are turned away are not displayed and have no
+		// box, so they would all read as sitting at the top of the screen.
 		const list = Array.from(
 			document.querySelectorAll<HTMLElement>("main section"),
-		);
+		).filter((s) => s.getClientRects().length > 0);
 		if (!list.length) return { index: -1, el: null };
 		const line = window.innerHeight * 0.35;
 		let index = 0;

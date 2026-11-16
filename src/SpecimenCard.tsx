@@ -6,26 +6,15 @@ import {
 	type Specimen,
 } from "./specimens";
 import { NpmCount } from "./NpmCount";
+import { useMediaQuery } from "./media";
 
 // On a phone the full pitch is a wall of text above the facts most people
 // open the card for, so it is folded to a preview of about this many letters.
 const PREVIEW_CHARS = 220;
 
-function useNarrow(): boolean {
-	const query = "(max-width: 639px)";
-	const [narrow, setNarrow] = useState(() => window.matchMedia(query).matches);
-	useEffect(() => {
-		const mq = window.matchMedia(query);
-		const onChange = () => setNarrow(mq.matches);
-		mq.addEventListener("change", onChange);
-		return () => mq.removeEventListener("change", onChange);
-	}, []);
-	return narrow;
-}
-
 /** Cut at a word boundary, never mid-word. */
 function Description({ text }: { text: string }) {
-	const narrow = useNarrow();
+	const narrow = useMediaQuery("(max-width: 639px)");
 	const [open, setOpen] = useState(false);
 	const foldable = narrow && text.length > PREVIEW_CHARS;
 	const shown =
@@ -58,7 +47,7 @@ export function SpecimenCard({
 	reading: Reading;
 	onClose: () => void;
 }) {
-	const closeRef = useRef<HTMLButtonElement>(null);
+	const closeRef = useRef<HTMLAnchorElement>(null);
 	// Whatever opened the card gets the focus back when it closes, so a
 	// keyboard visitor is not dumped at the top of the document.
 	const returnTo = useRef<HTMLElement | null>(null);
@@ -136,14 +125,19 @@ export function SpecimenCard({
 								</p>
 							)}
 						</div>
-						<button
+						{/* A link home, so a specimen's own page can still be
+						    closed where the script has not loaded. */}
+						<a
 							ref={closeRef}
-							type="button"
-							onClick={onClose}
+							href="/"
+							onClick={(e) => {
+								e.preventDefault();
+								onClose();
+							}}
 							className="shrink-0 rounded-sm border border-theme-border px-2.5 py-1 text-sm text-theme-text transition hover:border-theme-accent/70 hover:bg-theme-accent/10 hover:text-theme-accent"
 						>
-						close
-						</button>
+							close
+						</a>
 					</div>
 
 					<div className="grid gap-5 px-5 py-5 sm:grid-cols-[9rem_1fr] sm:px-7 sm:py-6">

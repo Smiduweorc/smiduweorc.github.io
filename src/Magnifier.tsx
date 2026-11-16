@@ -8,21 +8,6 @@ import { useEffect, useRef, useState } from "react";
 const LENS_SIZE = 148;
 const NOTHING_HERE = "nothing pencilled in here.";
 
-export function useCoarsePointer(): boolean {
-	const [coarse, setCoarse] = useState(
-		() =>
-			typeof window !== "undefined" &&
-			window.matchMedia("(pointer: coarse)").matches,
-	);
-	useEffect(() => {
-		const mq = window.matchMedia("(pointer: coarse)");
-		const onChange = () => setCoarse(mq.matches);
-		mq.addEventListener("change", onChange);
-		return () => mq.removeEventListener("change", onChange);
-	}, []);
-	return coarse;
-}
-
 export function MagnifierToggle({
 	on,
 	onToggle,
