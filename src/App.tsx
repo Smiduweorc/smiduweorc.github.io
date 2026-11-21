@@ -305,7 +305,7 @@ const OPINIONS = [
 	"We force you to make safe, opinionated default choices.",
 	"Ship software we'd actually want to use ourselves.",
 	"AI is fine, so long as it is used reasonably. One human can't know everything. (No vibecoding: work is reviewed, or done by competent humans.)",
-	"DECIDE EARLY, DETAILS MATTER. Never \"just do an MVP and make changes later\"! (Be it a spec or anything else, this is important!)",
+	"DECIDE CORE COMMITMENTS EARLY, DETAILS MATTER. Never \"just do an MVP and make changes later\"! (Be it a spec or anything else, this is important!)",
 	"We are language agnostic: we use whichever language best suits the problem, pick one up whenever needed, and don't force a runtime to do something it shouldn't be doing.",
 	"We do this for the love of the game. We never advertise ourselves, and we don't care about \"establishing a userbase or community\" unless there is a good reason (e.g. getting usability opinions). These libraries are for us; if you find one useful, good for you.",
 	"We refuse blind compliance (if we adopt an RFC, there is a reason).",
