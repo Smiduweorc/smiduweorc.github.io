@@ -160,6 +160,15 @@ export const ARTWORK = {
 		ratio: 477 / 228,
 		scale: 0.9,
 	},
+	// Drawn from above with its wings open, in a single-weight line. It comes
+	// from the repo's SVG rather than logo.png, rendered and masked by hand:
+	// dark line on dark, so it is inverted before luminance becomes alpha.
+	monarch: {
+		kind: "mask",
+		src: "/collection/monarch.png",
+		ratio: 726 / 368,
+		scale: 0.9,
+	},
 	cocoon: { kind: "line", draw: "cocoon", ratio: 120 / 76, scale: 0.3 },
 	grub: { kind: "line", draw: "grub", ratio: 120 / 76, scale: 0.34 },
 } as const satisfies Record<string, Artwork>;

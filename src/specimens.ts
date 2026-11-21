@@ -696,6 +696,37 @@ export const SPECIMENS: Specimen[] = [
 		note: "the beetle that gave up its wing cases to run everywhere. eleven protocols, same idea.",
 		quip: "same dung. different hill.",
 	},
+	{
+		id: "monarch",
+		name: "monarchButterflyIcloud",
+		binomial: "Danaus albumicola",
+		kind: "library",
+		art: "monarch",
+		tagline: "Reads a public iCloud Shared Album from Go.",
+		description:
+			"Give it the token from a public iCloud Shared Album link and it returns the album's name, its owner, and a download URL for every rendition of every photo and video. It imports only the standard library and needs Go 1.25 or later. It does not download the files, open private albums, retry, or sync incrementally: every call fetches the whole album and a failed call returns its error. NewClient refuses an http.Client without a Timeout. The endpoints are the undocumented ones the icloud.com web viewer uses, so if Apple changes them, Album fails with unexpected_status or malformed_response rather than guessing.",
+		taxonomy: {
+			order: "Go 1.25+, standard library only",
+			habitat: "anything that shows photos someone shared from an iPhone",
+			diet: "public iCloud Shared Album links",
+			stage: "released",
+			described: "November 2026",
+		},
+		tags: ["Go", "iCloud", "Shared Albums", "photos", "API client"],
+		links: [
+			{ label: "GitHub", href: `${GH}/monarchButterflyIcloud` },
+			{
+				label: "pkg.go.dev",
+				href: "https://pkg.go.dev/github.com/Smiduweorc/monarchButterflyIcloud",
+			},
+			{
+				label: "Docs",
+				href: "https://smiduweorc.github.io/monarchButterflyIcloud/github.com/Smiduweorc/monarchButterflyIcloud.html",
+			},
+		],
+		note: "a monarch migrates thousands of miles. this one only goes as far as apple's servers.",
+		quip: "it brought the photos back. every size of every one.",
+	},
 ];
 
 export const byId = (id: string): Specimen | undefined =>
