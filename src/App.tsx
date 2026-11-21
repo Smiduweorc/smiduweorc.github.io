@@ -653,6 +653,9 @@ function App({ path }: { path: string }) {
 							<CoffeeRing className="absolute -bottom-6 left-[38%] hidden w-36 rotate-12 lg:block" />
 							<Opinions />
 						</div>
+						<p className="mt-4 max-w-[60ch] text-theme-text-secondary">
+							This is my fun corner of the internet. In a professional environment I will never use these libraries without approval, I am unlikely to ever suggest using them, and I would never impose my own ideals and goals on anyone.
+						</p>
 					</Entry>
 
 					<Entry
